@@ -98,6 +98,59 @@ export interface Despesa extends RegistroBase {
   valor: number | null
 }
 
+// ------------------------------------------------- catálogo de motocicletas
+
+export type CategoriaMoto =
+  | 'street'
+  | 'naked'
+  | 'scooter'
+  | 'trail'
+  | 'adventure'
+  | 'esportiva'
+  | 'off-road'
+  | 'racing'
+  | 'touring'
+  | 'ciclomotor'
+  | 'eletrica'
+
+export const ROTULO_CATEGORIA_MOTO: Record<CategoriaMoto, string> = {
+  street: 'Street',
+  naked: 'Naked',
+  scooter: 'Scooter',
+  trail: 'Trail',
+  adventure: 'Adventure',
+  esportiva: 'Esportiva',
+  'off-road': 'Off Road',
+  racing: 'Racing',
+  touring: 'Touring',
+  ciclomotor: 'Ciclomotor',
+  eletrica: 'Elétrica',
+}
+
+/**
+ * De onde veio a informação deste modelo. Item 46: o catálogo não inventa.
+ *  - 'oficial': li o modelo na página do fabricante.
+ *  - 'linha-conhecida': modelo consolidado no mercado brasileiro que não
+ *     consegui confirmar na fonte nesta execução. Entra, mas marcado.
+ */
+export type ProcedenciaModelo = 'oficial' | 'linha-conhecida'
+
+export interface ModeloMoto {
+  id: string
+  marca: string
+  modelo: string
+  categoria: CategoriaMoto
+  ano?: number
+  /** Vazio por decisão de projeto — ver README, seção do catálogo. */
+  imagemUrl?: string
+  fonteUrl?: string
+  fonteTipo?: 'fabricante'
+  procedencia: ProcedenciaModelo
+  /** true quando o dado precisa de conferência humana antes de virar verdade. */
+  revisar?: boolean
+  ativa: boolean
+}
+
 export type TipoLancamento = 'servico' | 'abastecimento' | 'despesa'
 
 export type Confianca = 'alta' | 'media' | 'baixa'
