@@ -159,6 +159,19 @@ describe('parser — datas', () => {
   })
 })
 
+describe('parser — descrição', () => {
+  it('não ecoa a frase quando soube classificar', () => {
+    expect(parseFrase('pedagio 10 ontem', opts).descricao).toBe('')
+    expect(parseFrase('troquei o oleo 80', opts).descricao).toBe('')
+    expect(parseFrase('gasolina 50', opts).descricao).toBe('')
+  })
+
+  it('guarda o texto cru quando não soube — é a única pista que sobra', () => {
+    expect(parseFrase('xablau 30', opts).descricao).toBe('xablau 30')
+    expect(parseFrase('oficina 200', opts).descricao).toBe('oficina 200')
+  })
+})
+
 describe('parser — casos ruins', () => {
   it('frase vazia não vira lançamento', () => {
     expect(parseTexto('', opts)).toEqual([])

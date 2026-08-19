@@ -5,6 +5,7 @@ import { ProvedorConta } from './estado-conta'
 import Home from './paginas/Home'
 import Garagem from './paginas/Garagem'
 import CadastroMoto from './paginas/CadastroMoto'
+import DetalheMoto from './paginas/DetalheMoto'
 import Historico from './paginas/Historico'
 import Custos from './paginas/Custos'
 import Config from './paginas/Config'
@@ -103,7 +104,10 @@ function Esqueleto() {
   }
 
   const semMoto = motos.length === 0
-  const emCadastro = local.pathname.startsWith('/moto/')
+  // Só o formulário de moto ocupa a tela inteira. Painel e itens são telas
+  // normais e mantêm a navegação.
+  const emCadastro =
+    local.pathname === '/moto/nova' || /^\/moto\/[^/]+$/.test(local.pathname)
   // Quem ainda não cadastrou moto precisa conseguir chegar na conta — é por
   // lá que se recupera uma garagem sincronizada em outro aparelho.
   const dispensaMoto = emCadastro || local.pathname === '/conta'
@@ -120,6 +124,7 @@ function Esqueleto() {
       <Route path="/conta" element={<Conta />} />
       <Route path="/moto/nova" element={<CadastroMoto />} />
       <Route path="/moto/:id" element={<CadastroMoto />} />
+      <Route path="/moto/:id/painel" element={<DetalheMoto />} />
       <Route path="/moto/:id/itens" element={<ItensMoto />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

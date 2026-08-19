@@ -283,6 +283,14 @@ export function parseFrase(linha: string, opcoes: OpcoesParser = {}): Lancamento
   else if (numerosIgnorados.length > 0) confianca = 'media'
   else if (camposFaltando.length > 0) confianca = 'media'
 
+  // A descrição é campo de observação, não eco da frase. Só guarda o texto
+  // cru quando o parser não soube classificar — aí ele é a única pista que
+  // sobra para a pessoa entender o que registrou.
+  const identificou =
+    (tipo === 'servico' && itemNome !== null) ||
+    (tipo === 'despesa' && categoriaDespesa !== null) ||
+    tipo === 'abastecimento'
+
   return {
     textoOriginal,
     tipo,
@@ -294,7 +302,7 @@ export function parseFrase(linha: string, opcoes: OpcoesParser = {}): Lancamento
     categoriaDespesa,
     tipoCombustivel,
     tanqueCheio,
-    descricao: textoOriginal,
+    descricao: identificou ? '' : textoOriginal,
     confianca,
     camposFaltando,
     numerosIgnorados,

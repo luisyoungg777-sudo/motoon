@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Alternador, Folha, Selo, Vazio } from '@/components/ui'
+import { Alternador, Folha, Vazio } from '@/components/ui'
 import { IcoBusca, IcoLixeira } from '@/components/icones'
 import { useMoto } from '@/estado'
 import { apagar, salvarAbastecimento, salvarDespesa, salvarServico } from '@/db/repos'
@@ -31,16 +31,48 @@ interface Evento {
 type FiltroTipo = 'tudo' | TipoLancamento
 type FiltroPeriodo = 'mes' | 'ano' | 'tudo'
 
-const CORES_TIPO: Record<TipoLancamento, 'laranja' | 'verde' | 'apagado'> = {
-  servico: 'laranja',
-  abastecimento: 'verde',
-  despesa: 'apagado',
-}
-
 const SIGLA_TIPO: Record<TipoLancamento, string> = {
   servico: 'serviço',
-  abastecimento: 'abast.',
+  abastecimento: 'abastecimento',
   despesa: 'despesa',
+}
+
+const COR_TIPO: Record<TipoLancamento, string> = {
+  servico: '#FF6B00',
+  abastecimento: '#22C55E',
+  despesa: '#68727F',
+}
+
+const MESES = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+]
+
+function rotuloMesAno(anoMes: string): string {
+  const [ano, mes] = anoMes.split('-').map(Number)
+  return `${MESES[mes - 1]} de ${ano}`
+}
+
+/** Os eventos já chegam ordenados do mais novo para o mais antigo. */
+function agruparPorMes(lista: Evento[]): [string, Evento[]][] {
+  const mapa = new Map<string, Evento[]>()
+  for (const e of lista) {
+    const chave = e.data.slice(0, 7)
+    const atual = mapa.get(chave)
+    if (atual) atual.push(e)
+    else mapa.set(chave, [e])
+  }
+  return Array.from(mapa.entries())
 }
 
 export default function Historico() {
@@ -143,30 +175,48 @@ export default function Historico() {
       {eventos.length === 0 ? (
         <Vazio titulo="Nada registrado nesse recorte ainda." />
       ) : (
-        <ul className="space-y-2">
-          {eventos.map((e) => (
-            <li key={e.id}>
-              <button
-                type="button"
-                onClick={() => setAberto(e)}
-                className="painel flex w-full items-center gap-3 p-3 text-left active:bg-painel2"
-              >
-                <div className="w-14 shrink-0 text-center">
-                  <span className="block text-xs text-apagado">{formatarData(e.data).slice(0, 5)}</span>
-                  <span className="block text-[10px] text-apagado">{e.data.slice(0, 4)}</span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-bold">{e.titulo}</p>
-                  <p className="truncate text-xs text-apagado">{e.detalhe || '—'}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-black">{formatarDinheiro(e.valor)}</p>
-                  <Selo cor={CORES_TIPO[e.tipo]}>{SIGLA_TIPO[e.tipo]}</Selo>
-                </div>
-              </button>
-            </li>
+        <div className="space-y-6">
+          {agruparPorMes(eventos).map(([mes, doMes]) => (
+            <section key={mes}>
+              <h2 className="mb-3 text-micro font-bold uppercase tracking-[0.18em] text-textoFraco">
+                {rotuloMesAno(mes)}
+              </h2>
+
+              {/* A linha vertical liga os pontos e faz o mês virar uma trilha. */}
+              <ul className="relative space-y-4 before:absolute before:bottom-2 before:left-[5px] before:top-2 before:w-px before:bg-borda">
+                {doMes.map((e) => (
+                  <li key={e.id} className="relative pl-6">
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2 border-bg"
+                      style={{ background: COR_TIPO[e.tipo] }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAberto(e)}
+                      className="flex w-full items-start justify-between gap-3 rounded-lg px-1 py-0.5 text-left hover:bg-superficie"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-micro uppercase text-textoFraco">
+                          {formatarData(e.data).slice(0, 5)} · {SIGLA_TIPO[e.tipo]}
+                        </span>
+                        <span className="block truncate font-semibold">{e.titulo}</span>
+                        {e.detalhe && (
+                          <span className="block truncate text-micro text-textoSec">
+                            {e.detalhe}
+                          </span>
+                        )}
+                      </span>
+                      <span className="shrink-0 font-bold tabular-nums">
+                        {formatarDinheiro(e.valor)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
 
       {aberto && <FolhaDetalhe evento={aberto} aoFechar={() => setAberto(null)} />}

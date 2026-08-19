@@ -98,7 +98,7 @@ export default function Garagem() {
                   type="button"
                   onClick={() => {
                     trocarMoto(moto.id)
-                    navegar('/')
+                    navegar(`/moto/${moto.id}/painel`)
                   }}
                   className={`w-full overflow-hidden rounded-xl border text-left transition-opacity ${
                     ehAtiva ? 'border-borda' : 'border-borda opacity-70 hover:opacity-100'

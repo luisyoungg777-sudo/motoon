@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Aviso, Cartao, Rotulo, Skeleton } from '@/components/ui'
 import { useConta } from '@/estado-conta'
+import { formatarData } from '@/services/datas'
 import { criarConta, definirNovaSenha, entrar, recuperarSenha, sair, type Resultado } from '@/services/auth'
 
 type Aba = 'entrar' | 'criar' | 'esqueci'
@@ -90,7 +91,7 @@ function NuvemDesligada() {
 }
 
 function Logado() {
-  const { conta, pendentes } = useConta()
+  const { conta, pendentes, sync, ultimaSync, erroSync, sincronizarAgora } = useConta()
   const [trocando, setTrocando] = useState(false)
   const [senha, setSenha] = useState('')
   const [recado, setRecado] = useState<string | null>(null)
@@ -123,23 +124,56 @@ function Logado() {
         </div>
       </Cartao>
 
-      <Cartao className="space-y-2 p-4">
+      <Cartao className="space-y-3 p-4">
         <Rotulo>Sincronização</Rotulo>
-        {pendentes === 0 ? (
-          <p className="flex items-center gap-2 font-semibold text-sucesso">
-            <CheckCircle2 className="h-5 w-5" />
-            Tudo sincronizado
+
+        {sync === 'sincronizando' ? (
+          <p className="flex items-center gap-2 font-semibold text-textoSec">
+            <RefreshCw className="h-5 w-5 animate-spin" />
+            Sincronizando…
           </p>
-        ) : (
+        ) : sync === 'erro' ? (
+          <p className="flex items-start gap-2 font-semibold text-perigo">
+            <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" />
+            <span>
+              Não consegui sincronizar
+              {erroSync && <span className="block text-corpo font-normal">{erroSync}</span>}
+            </span>
+          </p>
+        ) : pendentes > 0 ? (
           <p className="flex items-center gap-2 font-semibold text-aviso">
             <RefreshCw className="h-5 w-5" />
             {pendentes} {pendentes === 1 ? 'alteração pendente' : 'alterações pendentes'}
           </p>
+        ) : (
+          <p className="flex items-center gap-2 font-semibold text-sucesso">
+            <CheckCircle2 className="h-5 w-5" />
+            Tudo sincronizado
+          </p>
         )}
+
         <p className="text-corpo text-textoSec">
-          O envio automático para a nuvem entra na próxima etapa. Por enquanto a fila só acumula
-          localmente — nenhum dado seu saiu deste aparelho.
+          {ultimaSync
+            ? `Última sincronização em ${formatarData(ultimaSync.slice(0, 10))} às ${ultimaSync.slice(11, 16)}.`
+            : 'Ainda não sincronizou nesta conta.'}
         </p>
+
+        {pendentes > 0 && sync !== 'sincronizando' && (
+          <p className="text-corpo text-textoSec">
+            O que está pendente continua guardado aqui. Nada se perde — o Motoon tenta de novo
+            sozinho quando a internet voltar.
+          </p>
+        )}
+
+        <button
+          type="button"
+          className="btn-escuro w-full"
+          disabled={sync === 'sincronizando'}
+          onClick={() => void sincronizarAgora()}
+        >
+          <RefreshCw className="h-[18px] w-[18px]" />
+          Sincronizar agora
+        </button>
       </Cartao>
 
       {trocando ? (
