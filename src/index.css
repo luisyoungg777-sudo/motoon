@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0c0e11;
+  --painel: #15181d;
+  --painel2: #1c2027;
+  --linha: #2a2f37;
+  --laranja: #ff6b00;
+  --texto: #e9ecef;
+  --apagado: #8e97a2;
+  --verde: #10b981;
+  --amarelo: #f59e0b;
+  --vermelho: #ef4444;
+
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Nada de zoom involuntário no iOS: campo abaixo de 16px dispara o zoom. */
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  font-size: 16px;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+@layer components {
+  .campo {
+    @apply w-full min-h-toque rounded-lg border border-linha bg-painel2 px-3 py-2
+           text-texto placeholder:text-apagado
+           focus:border-laranja focus:outline-none focus:ring-1 focus:ring-laranja;
+  }
+
+  .rotulo {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-apagado;
+  }
+
+  .painel {
+    @apply rounded-xl border border-linha bg-painel;
+  }
+
+  .btn {
+    @apply inline-flex min-h-toque items-center justify-center gap-2 rounded-lg px-4
+           font-bold tracking-wide transition active:scale-[0.98]
+           disabled:opacity-40 disabled:active:scale-100;
+  }
+
+  .btn-laranja {
+    @apply btn bg-laranja text-black;
+  }
+
+  .btn-escuro {
+    @apply btn border border-linha bg-painel2 text-texto;
+  }
+
+  .btn-fantasma {
+    @apply btn text-apagado;
+  }
+
+  .chip {
+    @apply inline-flex min-h-toque items-center rounded-lg border border-linha bg-painel2
+           px-3 text-sm font-semibold text-texto transition active:scale-95;
+  }
+
+  .chip-ativo {
+    @apply border-laranja bg-laranja text-black;
+  }
+
+  .num-grande {
+    @apply text-3xl font-black leading-none tracking-tight;
+  }
+}
+
+/* Barra inferior respeitando o notch. */
+.safe-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.folha {
+  animation: subir 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folha {
+    animation: none;
+  }
+}
