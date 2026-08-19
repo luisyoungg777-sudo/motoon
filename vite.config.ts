@@ -2,16 +2,31 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { viteSingleFile } from 'vite-plugin-singlefile'
 import { fileURLToPath, URL } from 'node:url'
+
+/**
+ * MOTOON_ARQUIVO_UNICO=1 gera um único .html com tudo embutido, para
+ * compartilhar como link sem precisar hospedar. Nesse modo o service worker
+ * sai fora — ele exige arquivo próprio e escopo, o que arquivo único não tem.
+ * O app continua inteiro; só não instala nem funciona offline.
+ */
+const arquivoUnico = process.env.MOTOON_ARQUIVO_UNICO === '1'
 
 export default defineConfig({
   // Caminho relativo: funciona igual na raiz de um domínio, num subdiretório
   // do GitHub Pages ou aberto direto do disco.
   base: './',
 
+  build: arquivoUnico
+    ? { assetsInlineLimit: 100_000_000, cssCodeSplit: false, outDir: 'dist-unico' }
+    : {},
+
   plugins: [
     react(),
+    ...(arquivoUnico ? [viteSingleFile()] : []),
     VitePWA({
+      disable: arquivoUnico,
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png'],
       manifest: {

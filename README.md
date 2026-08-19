@@ -84,6 +84,48 @@ para a real:
 Mesmo ligadas, elas nunca salvam sozinhas: preenchem o formulário e o usuário
 confirma.
 
+## Publicar
+
+O app é estático: qualquer hospedagem de arquivo serve, e todas as opções
+abaixo são gratuitas.
+
+### GitHub Pages
+
+Já existe o workflow em `.github/workflows/pages.yml`. Ele roda os testes e o
+typecheck antes de publicar — se algo quebrar, nada vai pro ar.
+
+1. Crie um repositório no GitHub e empurre este projeto.
+2. No repositório: **Settings → Pages → Source → GitHub Actions**.
+3. Pronto. Cada push na branch principal republica sozinho.
+
+A URL fica `https://SEU-USUARIO.github.io/NOME-DO-REPO/`. O `base: './'` no
+`vite.config.ts` e o roteamento por hash fazem funcionar em subdiretório sem
+ajuste nenhum.
+
+### Vercel ou Netlify
+
+Importe o repositório. Build `npm run build`, diretório `dist`. Nenhuma
+variável de ambiente é obrigatória.
+
+### Instalar como app
+
+Depois de publicado em HTTPS, o navegador oferece "Instalar" ou "Adicionar à
+tela de início". Aí o Motoon abre em janela própria, com ícone, e funciona
+offline — o service worker guarda tudo em cache.
+
+Service worker **exige HTTPS** (ou localhost). Aberto por `file://` o app roda,
+mas não instala.
+
+### Um arquivo só, para compartilhar rápido
+
+```bash
+MOTOON_ARQUIVO_UNICO=1 npx vite build
+```
+
+Gera `dist-unico/index.html` com tudo embutido, para mandar por link ou anexo.
+Nesse formato não há service worker, então não instala nem funciona offline —
+e download de PDF e de backup não funcionam dentro de iframe.
+
 ## Backup na nuvem (opcional)
 
 O app funciona inteiro sem conta. O login existe só para copiar seus dados
