@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { calcularConsumo, calcularVencimento, estimarKm, resumirCustos } from './calculos'
+import {
+  calcularConsumo,
+  calcularVencimento,
+  calcularVencimentos,
+  estimarKm,
+  resumirCustos,
+} from './calculos'
 import type {
   Abastecimento,
   Despesa,
@@ -178,6 +184,51 @@ describe('calcularVencimento', () => {
       HOJE,
     )
     expect(v.ultimoServico?.id).toBe('s2')
+  })
+})
+
+describe('calcularVencimentos — ordem da lista', () => {
+  function item(id: string, nome: string, km: number | null, dias: number | null): ItemManutencao {
+    return { ...itemOleo, id, nome, intervalo_km: km, intervalo_dias: dias }
+  }
+
+  it('numa moto recém-cadastrada, empatada em 100%, o prazo manda na frente do km', () => {
+    const motoNova = { ...moto, criada_em: HOJE }
+    // Ordem de entrada embaralhada de propósito: é o que o IndexedDB devolve.
+    const itens = [
+      item('i-ar', 'Filtro de ar', 10000, null),
+      item('i-corrente', 'Lubrificação da corrente', 500, 15),
+      item('i-calibra', 'Calibragem dos pneus', null, 7),
+      item('i-pneu', 'Pneu dianteiro', 1000, null),
+    ]
+    const vencimentos = calcularVencimentos(itens, [], motoNova, motoNova.km_inicial, HOJE)
+    // Todos realmente empatados — o desempate é que está sendo testado.
+    expect(vencimentos.every((v) => v.fracaoRestante === 1)).toBe(true)
+    const nomes = vencimentos.map((v) => v.item.nome)
+
+    expect(nomes).toEqual([
+      'Calibragem dos pneus',
+      'Lubrificação da corrente',
+      'Pneu dianteiro',
+      'Filtro de ar',
+    ])
+  })
+
+  it('quem está vencido vem antes de quem está em dia', () => {
+    const itens = [item('i-ar', 'Filtro de ar', 10000, null), item('i-calibra', 'Calibragem', null, 7)]
+    // 200 dias depois do cadastro a calibragem está muito vencida.
+    const nomes = calcularVencimentos(itens, [], moto, moto.km_inicial, '2026-07-20').map(
+      (v) => v.item.nome,
+    )
+    expect(nomes[0]).toBe('Calibragem')
+  })
+
+  it('não devolve item desativado', () => {
+    const itens = [
+      { ...item('i-ar', 'Filtro de ar', 10000, null), ativo: false },
+      item('i-calibra', 'Calibragem', null, 7),
+    ]
+    expect(calcularVencimentos(itens, [], moto, moto.km_inicial, HOJE)).toHaveLength(1)
   })
 })
 

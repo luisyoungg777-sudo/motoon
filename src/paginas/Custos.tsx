@@ -6,7 +6,7 @@ import { useMoto } from '@/estado'
 import { calcularConsumo, resumirCustos } from '@/services/calculos'
 import { hojeISO, inicioDoAno, inicioDoMes, mesAnterior, rotuloMes } from '@/services/datas'
 import { formatarDinheiro, formatarDinheiroCurto, formatarKm, formatarNumero } from '@/services/formato'
-import { gerarRelatorioPdf } from '@/services/pdf'
+import { gerarPdfDaMoto } from '@/services/relatorio'
 
 type Periodo = 'mes' | 'ano' | 'tudo'
 
@@ -155,12 +155,14 @@ export default function Custos() {
         type="button"
         className="btn-escuro w-full"
         onClick={() =>
-          gerarRelatorioPdf({
+          gerarPdfDaMoto({
             moto: motoAtiva,
             servicos,
+            abastecimentos,
+            despesas,
+            leituras,
             vencimentos,
             kmAtual: est.km,
-            totalGasto: resumirCustos(servicos, abastecimentos, despesas, leituras, null, null).total,
           })
         }
       >

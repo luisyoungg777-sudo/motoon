@@ -187,7 +187,20 @@ export function calcularVencimentos(
     .sort((a, b) => {
       const fa = a.fracaoRestante ?? Number.POSITIVE_INFINITY
       const fb = b.fracaoRestante ?? Number.POSITIVE_INFINITY
-      return fa - fb
+      if (fa !== fb) return fa - fb
+
+      // Moto recém-cadastrada deixa todo mundo empatado em 100%. Aí o que
+      // vale é quem chega antes de verdade: prazo primeiro, depois km, e
+      // por último o nome — para a lista nunca sair em ordem de uuid.
+      const diasA = a.diasRestante ?? Number.POSITIVE_INFINITY
+      const diasB = b.diasRestante ?? Number.POSITIVE_INFINITY
+      if (diasA !== diasB) return diasA - diasB
+
+      const kmA = a.kmRestante ?? Number.POSITIVE_INFINITY
+      const kmB = b.kmRestante ?? Number.POSITIVE_INFINITY
+      if (kmA !== kmB) return kmA - kmB
+
+      return a.item.nome.localeCompare(b.item.nome, 'pt-BR')
     })
 }
 

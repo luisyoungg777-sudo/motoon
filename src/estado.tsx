@@ -75,7 +75,9 @@ export function ProvedorMoto({ children }: { children: ReactNode }) {
   }, [id])
 
   const valor = useMemo<DadosMoto>(() => {
-    const itens = vivos(registros?.itens)
+    // O IndexedDB devolve na ordem da chave primária, que é uuid — ou seja,
+    // ordem aleatória na tela e no seletor de item. Ordena por nome.
+    const itens = vivos(registros?.itens).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     const servicos = vivos(registros?.servicos)
     const abastecimentos = vivos(registros?.abastecimentos)
     const despesas = vivos(registros?.despesas)

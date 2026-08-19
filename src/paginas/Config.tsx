@@ -4,8 +4,7 @@ import { Selo } from '@/components/ui'
 import { IcoChave, IcoLapis, IcoMais, IcoPdf, IcoSeta } from '@/components/icones'
 import { useMoto } from '@/estado'
 import { apagarTudo, baixarBackup, exportarBackup, importarBackup } from '@/services/backup'
-import { resumirCustos } from '@/services/calculos'
-import { gerarRelatorioPdf } from '@/services/pdf'
+import { gerarPdfDaMoto } from '@/services/relatorio'
 import { ROTULO_PERFIL } from '@/types'
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
@@ -92,19 +91,14 @@ export default function Config() {
               type="button"
               className="btn-escuro w-full"
               onClick={() =>
-                gerarRelatorioPdf({
+                gerarPdfDaMoto({
                   moto,
                   servicos,
+                  abastecimentos,
+                  despesas,
+                  leituras,
                   vencimentos,
                   kmAtual: estimativa.km,
-                  totalGasto: resumirCustos(
-                    servicos,
-                    abastecimentos,
-                    despesas,
-                    leituras,
-                    null,
-                    null,
-                  ).total,
                 })
               }
             >
