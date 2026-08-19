@@ -124,6 +124,44 @@ input[type='number'] {
   }
 }
 
+/**
+ * Medidor segmentado — a assinatura visual do app.
+ * Vocabulário de painel de moto (marcador de combustível), não de barra de
+ * progresso de dashboard. A cor do preenchimento vem do `color` do elemento.
+ */
+.medidor {
+  height: 7px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: repeating-linear-gradient(90deg, rgb(var(--surface-3)) 0 7px, transparent 7px 10px);
+}
+
+.medidor > i {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, currentColor 0 7px, transparent 7px 10px);
+  transition: width 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* O palco: a moto recebe luz de baixo, como numa garagem. */
+.palco {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 118%, rgb(var(--primary) / 0.16) 0%, transparent 62%),
+    rgb(var(--surface));
+}
+
+.palco::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--primary) / 0.5), transparent);
+}
+
 /* Barra inferior respeitando o notch. */
 .safe-bottom {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));

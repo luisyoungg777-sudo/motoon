@@ -204,6 +204,72 @@ export function calcularVencimentos(
     })
 }
 
+// ------------------------------------------------------- saúde da moto
+
+export interface SaudeMoto {
+  /** null quando não há histórico suficiente. Nunca uma porcentagem chutada. */
+  percentual: number | null
+  rotulo: string
+  /** Itens que entraram na conta e itens que ficaram de fora por falta de histórico. */
+  considerados: number
+  semHistorico: number
+}
+
+/** Abaixo disso a conta viraria opinião, não medição. */
+export const MINIMO_PARA_SAUDE = 3
+
+/**
+ * Nota da manutenção, de 0 a 100.
+ *
+ * Item em dia vale 1, item perto de vencer vale 0,5 e item vencido vale 0 —
+ * então uma moto bem cuidada dá 100, e cada item atrasado derruba na
+ * proporção do tamanho do catálogo. Item que nunca foi feito não entra: ele
+ * não é sinal de saúde nem de doença, é ausência de informação. Se sobrar
+ * menos de três itens com histórico, a resposta é "dados insuficientes".
+ */
+export function calcularSaude(vencimentos: Vencimento[]): SaudeMoto {
+  const comHistorico = vencimentos.filter((v) => !v.semHistorico)
+  const semHistorico = vencimentos.length - comHistorico.length
+
+  if (comHistorico.length < MINIMO_PARA_SAUDE) {
+    return {
+      percentual: null,
+      rotulo: 'Dados insuficientes',
+      considerados: comHistorico.length,
+      semHistorico,
+    }
+  }
+
+  const soma = comHistorico.reduce((total, v) => {
+    if (v.status === 'vermelho') return total
+    if (v.status === 'amarelo') return total + 0.5
+    return total + 1
+  }, 0)
+
+  const percentual = Math.round((soma / comHistorico.length) * 100)
+
+  return {
+    percentual,
+    rotulo: rotuloSaude(percentual),
+    considerados: comHistorico.length,
+    semHistorico,
+  }
+}
+
+function rotuloSaude(p: number): string {
+  if (p >= 90) return 'Manutenção em dia'
+  if (p >= 70) return 'Pede atenção'
+  if (p >= 40) return 'Manutenção atrasada'
+  return 'Manutenção muito atrasada'
+}
+
+export function corSaude(p: number | null): string {
+  if (p === null) return '#68727F'
+  if (p >= 90) return COR_STATUS.verde
+  if (p >= 60) return COR_STATUS.amarelo
+  return COR_STATUS.vermelho
+}
+
 // --------------------------------------------------------------- consumo
 
 export interface Consumo {

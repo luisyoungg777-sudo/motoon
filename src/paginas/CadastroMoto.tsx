@@ -1,24 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Alternador, Aviso, Campo } from '@/components/ui'
-import { IcoVoltar } from '@/components/icones'
-import { buscarModelos } from '@/services/catalogoMotos'
+import { ArrowLeft, Check, Search } from 'lucide-react'
+import { Alternador, Aviso, Rotulo } from '@/components/ui'
+import { SilhuetaMoto } from '@/components/MotoPalco'
+import { buscarModelos, listarMarcas } from '@/services/catalogoMotos'
 import { criarMoto, obterMoto, recalcularItensPadrao, salvarMoto } from '@/db/repos'
 import { useMoto } from '@/estado'
 import { formatarPlaca } from '@/services/formato'
-import { FATOR_PERFIL, type Moto, type PerfilUso } from '@/types'
+import {
+  FATOR_PERFIL,
+  ROTULO_CATEGORIA_MOTO,
+  type ModeloMoto,
+  type Moto,
+  type PerfilUso,
+} from '@/types'
 
 const PERFIS: { valor: PerfilUso; rotulo: string }[] = [
   { valor: 'urbano_leve', rotulo: 'Urbano leve' },
   { valor: 'urbano_pesado', rotulo: 'Urbano pesado' },
-  { valor: 'trilha', rotulo: 'Trilha / terra' },
+  { valor: 'trilha', rotulo: 'Trilha' },
 ]
 
 const EXPLICACAO_PERFIL: Record<PerfilUso, string> = {
   urbano_leve: 'Uso normal. Os intervalos ficam como a referência genérica.',
-  urbano_pesado:
-    'Rodar o dia todo, muito para-e-anda, entrega. Os intervalos entram encurtados em 30%.',
-  trilha: 'Terra, barro, poeira. Os intervalos entram pela metade.',
+  urbano_pesado: 'Dia todo na rua, para-e-anda, entrega. Intervalos encurtam 30%.',
+  trilha: 'Terra, barro, poeira. Intervalos entram pela metade.',
 }
 
 export default function CadastroMoto() {
@@ -27,7 +33,13 @@ export default function CadastroMoto() {
   const { trocarMoto } = useMoto()
   const editando = Boolean(id)
 
-  const [motoOriginal, setMotoOriginal] = useState<Moto | null>(null)
+  const [original, setOriginal] = useState<Moto | null>(null)
+  const [escolhido, setEscolhido] = useState<ModeloMoto | null>(null)
+  const [manual, setManual] = useState(false)
+
+  const [busca, setBusca] = useState('')
+  const [marcaFiltro, setMarcaFiltro] = useState<string | null>(null)
+
   const [apelido, setApelido] = useState('')
   const [marca, setMarca] = useState('')
   const [modelo, setModelo] = useState('')
@@ -42,7 +54,7 @@ export default function CadastroMoto() {
     if (!id) return
     obterMoto(id).then((m) => {
       if (!m) return
-      setMotoOriginal(m)
+      setOriginal(m)
       setApelido(m.apelido)
       setMarca(m.marca)
       setModelo(m.modelo)
@@ -51,15 +63,38 @@ export default function CadastroMoto() {
       setCor(m.cor)
       setKmInicial(String(m.km_inicial))
       setPerfil(m.perfil_uso)
+      setManual(true)
     })
   }, [id])
 
-  const sugestoes = useMemo(() => (modelo.length >= 2 ? buscarModelos(modelo) : []), [modelo])
+  const resultados = useMemo(
+    () => buscarModelos({ texto: busca, marca: marcaFiltro, limite: 12 }),
+    [busca, marcaFiltro],
+  )
+
+  function escolher(m: ModeloMoto) {
+    setEscolhido(m)
+    setMarca(m.marca)
+    setModelo(m.modelo)
+    if (!apelido) setApelido(m.modelo)
+  }
+
+  const identificada = escolhido !== null || manual
   const podeSalvar = modelo.trim().length > 0 || apelido.trim().length > 0
 
   async function salvar() {
     if (!podeSalvar || salvando) return
     setSalvando(true)
+
+    const doCatalogo = escolhido
+      ? {
+          catalogo_id: escolhido.id,
+          catalogo_marca: escolhido.marca,
+          catalogo_modelo: escolhido.modelo,
+          catalogo_categoria: escolhido.categoria,
+          catalogo_fonte_url: escolhido.fonteUrl,
+        }
+      : {}
 
     const dados = {
       apelido: apelido.trim() || modelo.trim(),
@@ -69,170 +104,248 @@ export default function CadastroMoto() {
       placa: formatarPlaca(placa),
       cor: cor.trim(),
       km_inicial: Number(kmInicial) || 0,
-      foto_url: null,
+      foto_url: original?.foto_url ?? null,
       perfil_uso: perfil,
+      ...doCatalogo,
     }
 
-    if (motoOriginal) {
-      const perfilMudou = motoOriginal.perfil_uso !== perfil
-      await salvarMoto({ ...motoOriginal, ...dados })
-      if (perfilMudou) await recalcularItensPadrao(motoOriginal.id, perfil)
-      navegar('/config')
+    if (original) {
+      const perfilMudou = original.perfil_uso !== perfil
+      await salvarMoto({ ...original, ...dados })
+      if (perfilMudou) await recalcularItensPadrao(original.id, perfil)
+      navegar('/garagem')
     } else {
       const nova = await criarMoto(dados)
       trocarMoto(nova.id)
       navegar('/')
     }
+    setSalvando(false)
   }
 
+  // ------------------------------------------------- passo 1: qual é a moto
+  if (!identificada) {
+    return (
+      <div className="animate-entrar min-h-screen px-4 pb-8 pt-4">
+        <button
+          type="button"
+          onClick={() => navegar(-1)}
+          className="-ml-2 mb-5 flex items-center gap-2 rounded-lg py-2 pl-2 pr-3 text-sm font-medium text-textoSec hover:text-texto"
+        >
+          <ArrowLeft className="h-[18px] w-[18px]" />
+          Adicionar moto
+        </button>
+
+        <h1 className="text-display font-extrabold">Qual é a sua moto?</h1>
+        <p className="mt-1.5 text-corpo text-textoSec">
+          Digite a marca ou o modelo. O resto é opcional.
+        </p>
+
+        <div className="relative mt-5">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-textoFraco" />
+          <input
+            className="campo pl-11"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="cg 160, titan, nmax…"
+            autoComplete="off"
+            aria-label="Buscar modelo"
+            autoFocus
+          />
+        </div>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {[null, ...listarMarcas()].map((m) => (
+            <button
+              key={m ?? 'todas'}
+              type="button"
+              onClick={() => setMarcaFiltro(m)}
+              className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                marcaFiltro === m
+                  ? 'border-primaria bg-primaria text-black'
+                  : 'border-borda bg-superficie2 text-textoSec hover:text-texto'
+              }`}
+            >
+              {m ?? 'Todas'}
+            </button>
+          ))}
+        </div>
+
+        <ul className="mt-4 space-y-2">
+          {resultados.map((m) => (
+            <li key={m.id}>
+              <button
+                type="button"
+                onClick={() => escolher(m)}
+                className="flex w-full items-center gap-3 rounded-xl border border-borda bg-superficie p-2.5 text-left transition-colors hover:bg-superficie2"
+              >
+                <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-superficie2 text-superficie3">
+                  <SilhuetaMoto className="h-8 w-auto" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-micro font-semibold uppercase tracking-[0.2em] text-primaria">
+                    {m.marca}
+                  </span>
+                  <span className="block truncate font-semibold">{m.modelo}</span>
+                  <span className="block text-micro text-textoFraco">
+                    {ROTULO_CATEGORIA_MOTO[m.categoria]}
+                    {m.revisar && ' · a conferir'}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        {resultados.length === 0 && busca.trim().length > 0 && (
+          <p className="mt-6 text-center text-corpo text-textoSec">
+            Nenhum modelo com “{busca}” no catálogo.
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setManual(true)}
+          className="mt-6 w-full py-3 text-center text-corpo text-textoSec hover:text-texto"
+        >
+          Não achou? <span className="font-semibold text-primaria">Cadastrar manualmente</span>
+        </button>
+      </div>
+    )
+  }
+
+  // ------------------------------------------------ passo 2: os detalhes
   const fator = FATOR_PERFIL[perfil]
 
   return (
-    <div className="min-h-screen px-4 pb-32 pt-4">
-      <header className="mb-5 flex items-center gap-2">
-        {editando && (
-          <button
-            type="button"
-            onClick={() => navegar(-1)}
-            aria-label="Voltar"
-            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-lg text-apagado active:bg-painel2"
-          >
-            <IcoVoltar />
-          </button>
-        )}
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">
-            {editando ? 'Editar moto' : 'Cadastrar a moto'}
-          </h1>
-          {!editando && (
-            <p className="text-sm text-apagado">Só o modelo já basta. O resto dá para preencher depois.</p>
-          )}
+    <div className="animate-entrar min-h-screen px-4 pb-32 pt-4">
+      <button
+        type="button"
+        onClick={() => (editando ? navegar(-1) : (setEscolhido(null), setManual(false)))}
+        className="-ml-2 mb-5 flex items-center gap-2 rounded-lg py-2 pl-2 pr-3 text-sm font-medium text-textoSec hover:text-texto"
+      >
+        <ArrowLeft className="h-[18px] w-[18px]" />
+        {editando ? 'Voltar' : 'Trocar de moto'}
+      </button>
+
+      {escolhido && (
+        <div className="palco mb-5 flex items-center gap-4 rounded-xl border border-borda p-4">
+          <SilhuetaMoto className="h-14 w-auto shrink-0 text-superficie3" />
+          <div className="min-w-0">
+            <p className="text-micro font-semibold uppercase tracking-[0.2em] text-primaria">
+              {escolhido.marca}
+            </p>
+            <p className="truncate text-lg font-extrabold tracking-tight">{escolhido.modelo}</p>
+            <p className="text-micro text-textoFraco">
+              {ROTULO_CATEGORIA_MOTO[escolhido.categoria]}
+            </p>
+          </div>
+          <Check className="ml-auto h-5 w-5 shrink-0 text-primaria" />
         </div>
-      </header>
+      )}
 
       <div className="space-y-4">
-        <Campo rotulo="Modelo">
-          <input
-            className="campo"
-            value={modelo}
-            onChange={(e) => setModelo(e.target.value)}
-            placeholder="CG 160 Fan"
-            autoComplete="off"
-            enterKeyHint="next"
-          />
-        </Campo>
-
-        {sugestoes.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {sugestoes.map((s) => (
-              <button
-                key={`${s.marca}-${s.modelo}`}
-                type="button"
-                className="chip"
-                onClick={() => {
-                  setMarca(s.marca)
-                  setModelo(s.modelo)
-                  if (!apelido) setApelido(s.modelo)
-                }}
-              >
-                {s.marca} {s.modelo}
-              </button>
-            ))}
+        {!escolhido && (
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="rotulo">Marca</span>
+              <input className="campo" value={marca} onChange={(e) => setMarca(e.target.value)} placeholder="Honda" />
+            </label>
+            <label className="block">
+              <span className="rotulo">Modelo</span>
+              <input className="campo" value={modelo} onChange={(e) => setModelo(e.target.value)} placeholder="CG 160" />
+            </label>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Campo rotulo="Marca">
+          <label className="block">
+            <span className="rotulo">Ano</span>
             <input
-              className="campo"
-              value={marca}
-              onChange={(e) => setMarca(e.target.value)}
-              placeholder="Honda"
-              autoComplete="off"
-            />
-          </Campo>
-          <Campo rotulo="Ano">
-            <input
-              className="campo"
+              className="campo tabular-nums"
               value={ano}
               onChange={(e) => setAno(e.target.value.replace(/\D/g, '').slice(0, 4))}
               inputMode="numeric"
-              placeholder="2022"
+              placeholder="2026"
             />
-          </Campo>
+          </label>
+          <label className="block">
+            <span className="rotulo">Cor</span>
+            <input className="campo" value={cor} onChange={(e) => setCor(e.target.value)} placeholder="Preta" />
+          </label>
         </div>
 
-        <Campo rotulo="Apelido" dica="Como você chama ela. Aparece na home.">
+        <label className="block">
+          <span className="rotulo">Apelido</span>
           <input
             className="campo"
             value={apelido}
             onChange={(e) => setApelido(e.target.value)}
-            placeholder="Fanzoca"
+            placeholder="Como você chama ela"
           />
-        </Campo>
+        </label>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Campo rotulo="Placa">
-            <input
-              className="campo uppercase"
-              value={placa}
-              onChange={(e) => setPlaca(e.target.value.toUpperCase().slice(0, 8))}
-              placeholder="ABC1D23"
-              autoComplete="off"
-            />
-          </Campo>
-          <Campo rotulo="Cor">
-            <input
-              className="campo"
-              value={cor}
-              onChange={(e) => setCor(e.target.value)}
-              placeholder="Preta"
-            />
-          </Campo>
-        </div>
-
-        <Campo rotulo="Km de hoje" dica="O que está marcando no painel agora.">
+        <label className="block">
+          <span className="rotulo">Placa</span>
           <input
-            className="campo"
+            className="campo uppercase"
+            value={placa}
+            onChange={(e) => setPlaca(e.target.value.toUpperCase().slice(0, 8))}
+            placeholder="ABC1D23"
+            autoComplete="off"
+          />
+        </label>
+
+        <label className="block">
+          <span className="rotulo">Km de hoje</span>
+          <input
+            className="campo text-xl font-bold tabular-nums"
             value={kmInicial}
             onChange={(e) => setKmInicial(e.target.value.replace(/\D/g, '').slice(0, 7))}
             inputMode="numeric"
             placeholder="12500"
           />
-        </Campo>
+          <span className="mt-1 block text-micro text-textoFraco">
+            O que está marcando no painel agora.
+          </span>
+        </label>
 
         <div>
-          <span className="rotulo">Como você usa a moto</span>
-          <Alternador opcoes={PERFIS} valor={perfil} aoTrocar={setPerfil} />
-          <p className="mt-2 text-xs leading-snug text-apagado">{EXPLICACAO_PERFIL[perfil]}</p>
+          <Rotulo>Como você usa a moto</Rotulo>
+          <div className="mt-2">
+            <Alternador opcoes={PERFIS} valor={perfil} aoTrocar={setPerfil} />
+          </div>
+          <p className="mt-2 text-micro text-textoSec">{EXPLICACAO_PERFIL[perfil]}</p>
           {fator !== 1 && (
-            <p className="mt-1 text-xs font-bold text-laranja">
-              Intervalos multiplicados por {String(fator).replace('.', ',')} (uso severo).
+            <p className="mt-1 text-micro font-semibold text-primaria">
+              Intervalos multiplicados por {String(fator).replace('.', ',')}.
             </p>
           )}
         </div>
 
-        <div className="painel space-y-2 p-3">
-          <p className="text-sm font-bold">O que vai ser criado junto</p>
-          <p className="text-sm leading-snug text-apagado">
-            Uma lista de 16 itens de manutenção de moto — óleo, corrente, freio, pneu, vela — com
-            intervalos já preenchidos, prontos para você ajustar.
-          </p>
-          <Aviso>
-            Os intervalos são referência genérica de uso urbano. Confira no manual da sua moto e
-            edite em Ajustes → Itens de manutenção.
-          </Aviso>
-        </div>
+        {!editando && (
+          <div className="rounded-xl border border-borda bg-superficie p-3.5">
+            <p className="text-sm font-semibold">Vai junto no cadastro</p>
+            <p className="mt-1 text-corpo text-textoSec">
+              16 itens de manutenção de moto — óleo, corrente, freio, pneu, vela — com intervalos
+              já preenchidos, prontos para ajustar.
+            </p>
+            <div className="mt-2">
+              <Aviso>
+                Os intervalos são referência genérica de uso urbano. Confira no manual da sua moto.
+              </Aviso>
+            </div>
+          </div>
+        )}
 
-        {editando && motoOriginal && motoOriginal.perfil_uso !== perfil && (
+        {editando && original && original.perfil_uso !== perfil && (
           <Aviso>
-            Trocar o perfil recalcula só os itens que você ainda não editou. Os que você já
-            confirmou no manual ficam como estão.
+            Trocar o perfil recalcula só os itens que você ainda não editou. Os que você confirmou
+            no manual ficam como estão.
           </Aviso>
         )}
       </div>
 
-      <div className="safe-bottom fixed inset-x-0 bottom-0 mx-auto max-w-lg border-t border-linha bg-bg px-4 pt-3">
+      <div className="safe-bottom fixed inset-x-0 bottom-0 mx-auto max-w-conteudo border-t border-borda bg-bg px-4 pt-3">
         <button
           type="button"
           className="btn-laranja w-full text-lg"

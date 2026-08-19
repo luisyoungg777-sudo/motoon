@@ -17,6 +17,7 @@ export default function FolhaRegistrar({
   itens,
   vencimentos,
   kmEstimado,
+  tipoInicial = 'servico',
 }: {
   aberta: boolean
   aoFechar: () => void
@@ -24,9 +25,11 @@ export default function FolhaRegistrar({
   itens: ItemManutencao[]
   vencimentos: Vencimento[]
   kmEstimado: number | null
+  /** Os atalhos da home abrem a folha já no tipo certo. */
+  tipoInicial?: TipoLancamento
 }) {
-  const [tipo, setTipo] = useState<TipoLancamento>('servico')
-  const [rascunho, setRascunho] = useState<Rascunho>(() => rascunhoVazio('servico', kmEstimado))
+  const [tipo, setTipo] = useState<TipoLancamento>(tipoInicial)
+  const [rascunho, setRascunho] = useState<Rascunho>(() => rascunhoVazio(tipoInicial, kmEstimado))
   const [detalhes, setDetalhes] = useState(false)
   const [local, setLocal] = useState('')
   const [observacao, setObservacao] = useState('')
@@ -37,13 +40,13 @@ export default function FolhaRegistrar({
 
   useEffect(() => {
     if (!aberta) return
-    setTipo('servico')
-    setRascunho(rascunhoVazio('servico', kmEstimado))
+    setTipo(tipoInicial)
+    setRascunho(rascunhoVazio(tipoInicial, kmEstimado))
     setDetalhes(false)
     setLocal('')
     setObservacao('')
     setFoto(null)
-  }, [aberta, kmEstimado])
+  }, [aberta, kmEstimado, tipoInicial])
 
   function trocarTipo(t: TipoLancamento) {
     setTipo(t)

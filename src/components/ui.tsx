@@ -152,6 +152,45 @@ export function BarraProgresso({
   )
 }
 
+/**
+ * Medidor segmentado. Acompanha sempre um ponto colorido e um texto — status
+ * nunca depende só da cor (item 43 de acessibilidade).
+ */
+export function Medidor({
+  fracao,
+  cor,
+  rotulo,
+}: {
+  fracao: number
+  cor: string
+  rotulo?: string
+}) {
+  const largura = Math.max(0, Math.min(1, fracao)) * 100
+  return (
+    <div
+      role="progressbar"
+      aria-valuenow={Math.round(largura)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={rotulo}
+      className="medidor"
+      style={{ color: cor }}
+    >
+      <i style={{ width: `${largura}%` }} />
+    </div>
+  )
+}
+
+export function Ponto({ cor }: { cor: string }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-block h-[7px] w-[7px] shrink-0 rounded-full"
+      style={{ background: cor }}
+    />
+  )
+}
+
 export function Selo({
   children,
   cor = 'apagado',

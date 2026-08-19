@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   calcularConsumo,
+  calcularSaude,
   calcularVencimento,
   calcularVencimentos,
   estimarKm,
   resumirCustos,
+  type Vencimento,
 } from './calculos'
 import type {
   Abastecimento,
@@ -229,6 +231,70 @@ describe('calcularVencimentos — ordem da lista', () => {
       item('i-calibra', 'Calibragem', null, 7),
     ]
     expect(calcularVencimentos(itens, [], moto, moto.km_inicial, HOJE)).toHaveLength(1)
+  })
+})
+
+describe('calcularSaude', () => {
+  function venc(status: Vencimento['status'], semHistorico = false): Vencimento {
+    return {
+      item: itemOleo,
+      ultimoServico: null,
+      semHistorico,
+      kmRestante: null,
+      diasRestante: null,
+      fracaoRestante: null,
+      vencePor: null,
+      status,
+      resumo: '',
+    }
+  }
+
+  it('moto com tudo em dia dá 100%', () => {
+    const s = calcularSaude([venc('verde'), venc('verde'), venc('verde'), venc('verde')])
+    expect(s.percentual).toBe(100)
+    expect(s.rotulo).toBe('Manutenção em dia')
+  })
+
+  it('item vencido derruba, item perto de vencer derruba pela metade', () => {
+    // 2 verdes (2) + 1 amarelo (0,5) + 1 vermelho (0) = 2,5 de 4 = 63%
+    const s = calcularSaude([venc('verde'), venc('verde'), venc('amarelo'), venc('vermelho')])
+    expect(s.percentual).toBe(63)
+  })
+
+  it('tudo vencido dá zero, não um número simpático', () => {
+    const s = calcularSaude([venc('vermelho'), venc('vermelho'), venc('vermelho')])
+    expect(s.percentual).toBe(0)
+    expect(s.rotulo).toBe('Manutenção muito atrasada')
+  })
+
+  it('moto sem histórico não finge saúde', () => {
+    const s = calcularSaude([venc('verde', true), venc('verde', true), venc('verde', true)])
+    expect(s.percentual).toBeNull()
+    expect(s.rotulo).toBe('Dados insuficientes')
+    expect(s.semHistorico).toBe(3)
+  })
+
+  it('menos de três itens com histórico ainda é insuficiente', () => {
+    const s = calcularSaude([venc('verde'), venc('verde'), venc('verde', true)])
+    expect(s.percentual).toBeNull()
+    expect(s.considerados).toBe(2)
+  })
+
+  it('item sem histórico não conta como saudável nem como problema', () => {
+    // 3 verdes com histórico + 5 sem histórico continua 100%.
+    const s = calcularSaude([
+      venc('verde'),
+      venc('verde'),
+      venc('verde'),
+      ...Array.from({ length: 5 }, () => venc('vermelho', true)),
+    ])
+    expect(s.percentual).toBe(100)
+    expect(s.considerados).toBe(3)
+    expect(s.semHistorico).toBe(5)
+  })
+
+  it('lista vazia é insuficiente, não 100%', () => {
+    expect(calcularSaude([]).percentual).toBeNull()
   })
 })
 

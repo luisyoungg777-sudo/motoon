@@ -46,6 +46,19 @@ export interface Moto extends RegistroBase {
   criada_em: string
   arquivada: boolean
   perfil_uso: PerfilUso
+
+  /**
+   * Vindos do catálogo, todos opcionais. Moto cadastrada antes da Fase 4 não
+   * tem nenhum destes e continua funcionando — o app cai em `marca`/`modelo`.
+   * Como são campos sem índice, o IndexedDB aceita sem migration.
+   */
+  catalogo_id?: string
+  catalogo_marca?: string
+  catalogo_modelo?: string
+  catalogo_categoria?: CategoriaMoto
+  catalogo_ano?: number
+  catalogo_imagem_url?: string
+  catalogo_fonte_url?: string
 }
 
 export interface LeituraOdometro extends RegistroBase {
