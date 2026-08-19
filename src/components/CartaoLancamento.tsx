@@ -232,7 +232,7 @@ export default function CartaoLancamento({
         <label className="flex min-h-toque items-center gap-3">
           <input
             type="checkbox"
-            className="h-6 w-6 accent-[color:var(--laranja)]"
+            className="h-6 w-6 accent-primaria"
             checked={l.tanqueCheio}
             onChange={(e) => mudar({ tanqueCheio: e.target.checked })}
           />

@@ -229,7 +229,7 @@ function FolhaItem({
         <label className="flex min-h-toque items-center gap-3">
           <input
             type="checkbox"
-            className="h-6 w-6 accent-[color:var(--laranja)]"
+            className="h-6 w-6 accent-primaria"
             checked={rascunho.ativo}
             onChange={(e) => setRascunho({ ...rascunho, ativo: e.target.checked })}
           />

@@ -1,18 +1,36 @@
+@import '@fontsource-variable/inter';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Paleta do Motoon — fonte única.
+ * Guardada como tripla RGB para o Tailwind conseguir aplicar opacidade
+ * (`bg-superficie/95`). O hex ao lado é só para leitura humana.
+ */
 :root {
-  --bg: #0c0e11;
-  --painel: #15181d;
-  --painel2: #1c2027;
-  --linha: #2a2f37;
-  --laranja: #ff6b00;
-  --texto: #e9ecef;
-  --apagado: #8e97a2;
-  --verde: #10b981;
-  --amarelo: #f59e0b;
-  --vermelho: #ef4444;
+  --bg: 9 11 15; /* #090B0F */
+
+  --surface: 17 21 27; /* #11151B */
+  --surface-2: 23 28 35; /* #171C23 */
+  --surface-3: 29 35 44; /* #1D232C */
+
+  --primary: 255 107 0; /* #FF6B00 */
+  --primary-light: 255 138 61; /* #FF8A3D */
+
+  --text: 245 247 250; /* #F5F7FA */
+  --text-secondary: 165 175 187; /* #A5AFBB */
+  --text-muted: 104 114 127; /* #68727F */
+
+  --success: 34 197 94; /* #22C55E */
+  --warning: 245 158 11; /* #F59E0B */
+  --danger: 239 68 68; /* #EF4444 */
+  --info: 59 130 246; /* #3B82F6 */
+
+  /* Borda translúcida: acompanha a superfície de baixo em vez de virar risco. */
+  --border: rgb(255 255 255 / 0.08);
+  --border-forte: rgb(255 255 255 / 0.14);
 
   color-scheme: dark;
 }
@@ -25,9 +43,10 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--texto);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
@@ -52,56 +71,66 @@ input[type='number'] {
   -moz-appearance: textfield;
 }
 
+/* Foco visível em tudo que recebe teclado — requisito de acessibilidade. */
+:focus-visible {
+  outline: 2px solid rgb(var(--primary));
+  outline-offset: 2px;
+}
+
 @layer components {
   .campo {
-    @apply w-full min-h-toque rounded-lg border border-linha bg-painel2 px-3 py-2
-           text-texto placeholder:text-apagado
-           focus:border-laranja focus:outline-none focus:ring-1 focus:ring-laranja;
+    @apply w-full min-h-toque rounded-lg border border-borda bg-superficie2 px-3.5 py-2.5
+           text-texto placeholder:text-textoFraco
+           transition-colors focus:border-primaria;
   }
 
   .rotulo {
-    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-apagado;
+    @apply mb-1.5 block text-rotulo font-semibold uppercase text-textoSec;
   }
 
   .painel {
-    @apply rounded-xl border border-linha bg-painel;
+    @apply rounded-xl border border-borda bg-superficie;
   }
 
   .btn {
-    @apply inline-flex min-h-toque items-center justify-center gap-2 rounded-lg px-4
-           font-bold tracking-wide transition active:scale-[0.98]
+    @apply inline-flex min-h-toque items-center justify-center gap-2 rounded-lg px-5
+           font-semibold transition-all duration-150 active:scale-[0.985]
            disabled:opacity-40 disabled:active:scale-100;
   }
 
   .btn-laranja {
-    @apply btn bg-laranja text-black;
+    @apply btn bg-primaria text-black hover:bg-primariaClara;
   }
 
   .btn-escuro {
-    @apply btn border border-linha bg-painel2 text-texto;
+    @apply btn border border-borda bg-superficie2 text-texto hover:bg-superficie3;
   }
 
   .btn-fantasma {
-    @apply btn text-apagado;
+    @apply btn text-textoSec hover:text-texto;
   }
 
   .chip {
-    @apply inline-flex min-h-toque items-center rounded-lg border border-linha bg-painel2
-           px-3 text-sm font-semibold text-texto transition active:scale-95;
+    @apply inline-flex min-h-toque items-center rounded-lg border border-borda bg-superficie2
+           px-3.5 text-sm font-medium text-texto transition-all active:scale-[0.97];
   }
 
   .chip-ativo {
-    @apply border-laranja bg-laranja text-black;
+    @apply border-primaria bg-primaria font-semibold text-black;
   }
 
   .num-grande {
-    @apply text-3xl font-black leading-none tracking-tight;
+    @apply text-display font-bold tabular-nums;
   }
 }
 
 /* Barra inferior respeitando o notch. */
 .safe-bottom {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.folha {
+  animation: subir 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes subir {
@@ -113,12 +142,12 @@ input[type='number'] {
   }
 }
 
-.folha {
-  animation: subir 180ms ease-out;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .folha {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

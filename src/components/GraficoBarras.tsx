@@ -25,7 +25,7 @@ export default function GraficoBarras({ barras }: { barras: BarraMes[] }) {
               width={larguraBarra * 0.64}
               height={Math.max(altura, b.valor > 0 ? 0.6 : 0)}
               rx="0.8"
-              fill={i === barras.length - 1 ? 'var(--laranja)' : 'var(--linha)'}
+              fill={i === barras.length - 1 ? 'rgb(var(--primary))' : 'rgb(var(--surface-3))'}
             />
           )
         })}
@@ -36,7 +36,7 @@ export default function GraficoBarras({ barras }: { barras: BarraMes[] }) {
             y="42"
             textAnchor="middle"
             fontSize="3.2"
-            fill="var(--apagado)"
+            fill="rgb(var(--text-muted))"
           >
             {b.rotulo}
           </text>

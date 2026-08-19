@@ -59,6 +59,41 @@ export function Folha({
   )
 }
 
+/** Bloco cinza pulsante no lugar do conteúdo — nunca uma tela branca. */
+export function Skeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={`animate-pulsar rounded-lg bg-superficie2 ${className}`}
+    />
+  )
+}
+
+export function Cartao({
+  children,
+  className = '',
+  aoTocar,
+  rotulo,
+}: {
+  children: ReactNode
+  className?: string
+  aoTocar?: () => void
+  rotulo?: string
+}) {
+  const base = `rounded-xl border border-borda bg-superficie ${className}`
+  if (!aoTocar) return <div className={base}>{children}</div>
+  return (
+    <button type="button" onClick={aoTocar} aria-label={rotulo} className={`${base} w-full text-left transition-colors hover:bg-superficie2`}>
+      {children}
+    </button>
+  )
+}
+
+/** Rótulo curto em caixa alta — usado acima de todo número importante. */
+export function Rotulo({ children }: { children: ReactNode }) {
+  return <span className="block text-micro font-semibold uppercase text-textoFraco">{children}</span>
+}
+
 export function Aviso({ children }: { children: ReactNode }) {
   return (
     <p className="flex items-start gap-1.5 text-xs leading-snug text-amarelo/90">
@@ -92,15 +127,27 @@ export function Vazio({
 export function BarraProgresso({
   fracao,
   cor,
+  rotulo,
 }: {
   /** 0 = vencido, 1 = acabou de fazer. */
   fracao: number
   cor: string
+  rotulo?: string
 }) {
   const largura = Math.max(0, Math.min(1, fracao)) * 100
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-linha">
-      <div className="h-full rounded-full transition-all" style={{ width: `${largura}%`, background: cor }} />
+    <div
+      role="progressbar"
+      aria-valuenow={Math.round(largura)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={rotulo}
+      className="h-1.5 w-full overflow-hidden rounded-full bg-superficie3"
+    >
+      <div
+        className="h-full rounded-full transition-[width] duration-500 ease-saida"
+        style={{ width: `${largura}%`, background: cor }}
+      />
     </div>
   )
 }
