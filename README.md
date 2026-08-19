@@ -3,6 +3,11 @@
 O caderno de manutenção da sua moto. Histórico, previsão do que está vencendo e
 quanto a moto custa — funcionando offline, sem login e sem mensalidade.
 
+**No ar:** https://luisyoungg777-sudo.github.io/motoon/
+
+No celular, o navegador oferece "Adicionar à tela de início" — aí o Motoon abre
+em janela própria e funciona sem internet.
+
 ## Rodar
 
 Precisa do Node.js 20 ou mais novo.
