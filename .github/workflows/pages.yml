@@ -32,18 +32,16 @@ jobs:
       # Se o teste ou o typecheck quebrar, nada vai pro ar.
       - run: npm test
 
-      # As chaves do Supabase vêm dos secrets do repositório. Sem elas o
-      # build passa igual — o app publicado só fica sem backup na nuvem, e
-      # a tela de conta explica isso. Nada quebra.
+      # As chaves vêm de .env.production, versionado no repositório.
       #
-      # A chave publicável é pública por definição: ela vai embutida no
-      # JavaScript entregue a qualquer visitante. Quem protege os dados é a
-      # RLS no banco. Ainda assim ela entra por secret, para não ficar
-      # versionada no repositório.
+      # NÃO declare `env:` com `${{ secrets.X }}` aqui. Secret ausente vira
+      # string vazia, e variável de ambiente vazia tem precedência sobre o
+      # arquivo .env no Vite — o build sairia sem as chaves justamente por
+      # causa da linha que deveria fornecê-las. Foi o que aconteceu.
+      #
+      # Para usar secrets em vez do arquivo, apague .env.production e só
+      # então declare o bloco env: aqui.
       - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
