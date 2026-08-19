@@ -84,7 +84,36 @@ para a real:
 Mesmo ligadas, elas nunca salvam sozinhas: preenchem o formulário e o usuário
 confirma.
 
+## Backup na nuvem (opcional)
+
+O app funciona inteiro sem conta. O login existe só para copiar seus dados
+para a nuvem e recuperá-los em outro aparelho.
+
+Para ligar:
+
+1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
+2. Rode `supabase/schema.sql` no editor SQL do projeto — ele cria as tabelas,
+   os índices e as políticas de RLS, e pode ser rodado de novo sem quebrar.
+3. Copie a URL e a chave `anon` do projeto para o `.env`.
+
+Sem essas duas variáveis, a tela de conta explica o que falta e o resto do app
+segue funcionando offline.
+
+As políticas de RLS ficam no banco, não no frontend: cada tabela só devolve
+linha cujo `user_id` seja o do usuário autenticado, e o `with check` no insert
+impede gravar linha em nome de outra pessoa.
+
+## Imagens do catálogo
+
+`imagemUrl` fica vazio de propósito em todos os modelos. Puxar imagem do site
+do fabricante seria hotlink de conteúdo de terceiro, as URLs apodrecem, e a
+foto sumiria justo offline — que é quando o app mais é usado. Então a foto do
+próprio usuário é a protagonista, guardada local, e o placeholder cobre o
+resto. Os campos `imagemUrl` e `fonteUrl` existem para quando houver imagem
+autorizada.
+
 ## O que ainda não está pronto
 
-- **Fase 4** — Supabase: login por e-mail, tabelas espelho, RLS e sincronização.
+- **Fase 4** — redesign das telas, garagem, detalhe da moto e a sincronização
+  bidirecional drenando a `sync_queue`.
 - **Fase 5** — PWA instalável, revisão de acessibilidade, publicação.

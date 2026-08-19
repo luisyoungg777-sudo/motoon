@@ -2,7 +2,9 @@ import { useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Selo } from '@/components/ui'
 import { IcoChave, IcoLapis, IcoMais, IcoPdf, IcoSeta } from '@/components/icones'
+import { ShieldCheck } from 'lucide-react'
 import { useMoto } from '@/estado'
+import { useConta } from '@/estado-conta'
 import { apagarTudo, baixarBackup, exportarBackup, importarBackup } from '@/services/backup'
 import { gerarPdfDaMoto } from '@/services/relatorio'
 import { ROTULO_PERFIL } from '@/types'
@@ -19,6 +21,7 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 export default function Config() {
   const { moto, motos, trocarMoto, servicos, abastecimentos, despesas, leituras, vencimentos, estimativa } =
     useMoto()
+  const { conta, configurado, pendentes } = useConta()
   const navegar = useNavigate()
   const entradaArquivo = useRef<HTMLInputElement>(null)
   const [recado, setRecado] = useState<string | null>(null)
@@ -143,13 +146,26 @@ export default function Config() {
       </Secao>
 
       <Secao titulo="Backup na nuvem">
-        <div className="painel space-y-1 p-3">
-          <p className="text-sm font-bold">Ainda não ligado</p>
-          <p className="text-sm leading-snug text-apagado">
-            O login é opcional e serve só para copiar seus dados para a nuvem. Nada sai do aparelho
-            enquanto você não entrar.
-          </p>
-        </div>
+        <button
+          type="button"
+          className="painel flex w-full items-center gap-3 p-3 text-left active:bg-painel2"
+          onClick={() => navegar('/conta')}
+        >
+          <ShieldCheck className="h-5 w-5 text-laranja" />
+          <div className="min-w-0 flex-1">
+            <p className="font-bold">{conta ? conta.email : 'Minha conta'}</p>
+            <p className="text-xs text-apagado">
+              {!configurado
+                ? 'Nuvem ainda não configurada — toque para ver como ligar'
+                : conta
+                  ? pendentes === 0
+                    ? 'Tudo sincronizado'
+                    : `${pendentes} ${pendentes === 1 ? 'alteração pendente' : 'alterações pendentes'}`
+                  : 'Entrar ou criar conta — o login é opcional'}
+            </p>
+          </div>
+          <IcoSeta className="h-5 w-5 text-apagado" />
+        </button>
       </Secao>
 
       <Secao titulo="Zona de perigo">

@@ -1,5 +1,7 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ProvedorMoto, useMoto } from './estado'
+import { ProvedorConta } from './estado-conta'
+import Conta from './paginas/Conta'
 import Home from './paginas/Home'
 import CadastroMoto from './paginas/CadastroMoto'
 import Historico from './paginas/Historico'
@@ -51,8 +53,11 @@ function Esqueleto() {
 
   const semMoto = motos.length === 0
   const naTelaDeCadastro = local.pathname.startsWith('/moto/')
+  // Quem ainda não cadastrou moto precisa conseguir chegar na conta —
+  // é por lá que se recupera uma garagem sincronizada em outro aparelho.
+  const dispensaMoto = naTelaDeCadastro || local.pathname === '/conta'
 
-  if (semMoto && !naTelaDeCadastro) {
+  if (semMoto && !dispensaMoto) {
     return <Navigate to="/moto/nova" replace />
   }
 
@@ -63,6 +68,7 @@ function Esqueleto() {
         <Route path="/historico" element={<Historico />} />
         <Route path="/custos" element={<Custos />} />
         <Route path="/config" element={<Config />} />
+        <Route path="/conta" element={<Conta />} />
         <Route path="/moto/nova" element={<CadastroMoto />} />
         <Route path="/moto/:id" element={<CadastroMoto />} />
         <Route path="/moto/:id/itens" element={<ItensMoto />} />
@@ -75,8 +81,10 @@ function Esqueleto() {
 
 export default function App() {
   return (
-    <ProvedorMoto>
-      <Esqueleto />
-    </ProvedorMoto>
+    <ProvedorConta>
+      <ProvedorMoto>
+        <Esqueleto />
+      </ProvedorMoto>
+    </ProvedorConta>
   )
 }
