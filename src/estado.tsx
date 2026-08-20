@@ -13,6 +13,8 @@ import type {
   Servico,
 } from '@/types'
 
+// Prefixo antigo de propósito: é chave de localStorage já gravada nos
+// aparelhos. Renomear junto com o app só faria o valor sumir. Ver db.ts.
 const CHAVE_MOTO_ATIVA = 'motoon.motoAtiva'
 
 function vivos<T extends RegistroBase>(lista: T[] | undefined): T[] {

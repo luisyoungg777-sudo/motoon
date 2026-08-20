@@ -152,3 +152,54 @@ export function IcoSeta({ className = base }: Props) {
     </svg>
   )
 }
+
+/**
+ * A marca: a letra `d` do meio de "DiasdMoto", com a barriga virando roda.
+ *
+ * Mesma geometria de `scripts/gerar-icones.mjs`, que produz os PNG do
+ * manifesto — se um dia mudar, mude nos dois. A `viewBox` é recortada nos
+ * limites do desenho (e não no quadro de 512 do ícone) para a peça encostar
+ * no texto ao lado sem folga fantasma.
+ *
+ * Sai em `currentColor`, então herda a cor de quem a usa.
+ */
+export function Marca({ className = base }: Props) {
+  const raios = [0, 1, 2, 3, 4].map((i) => (
+    <rect
+      key={i}
+      x="-7"
+      y="-84"
+      width="14"
+      height="66"
+      rx="7"
+      transform={`translate(256 308) rotate(${-90 + i * 72})`}
+    />
+  ))
+
+  return (
+    <svg viewBox="134 80 244 352" fill="currentColor" className={className} aria-hidden>
+      <circle cx="256" cy="308" r="102" fill="none" stroke="currentColor" strokeWidth="40" />
+      <rect x="338" y="80" width="40" height="352" rx="20" />
+      <circle cx="256" cy="308" r="20" />
+      {raios}
+    </svg>
+  )
+}
+
+/**
+ * O nome por extenso.
+ *
+ * `destacado` pinta o `d` do meio de laranja. Ele vem ligado, mas precisa
+ * SAIR quando a `Marca` estiver ao lado: a marca já é aquele `d`, e os dois
+ * laranjas juntos fazem a linha gaguejar — lê-se um "d" solto seguido de
+ * outro "d" dentro da palavra. Um lugar, uma vez.
+ */
+export function NomeEscrito({ className = '', destacado = true }: Props & { destacado?: boolean }) {
+  if (!destacado) return <span className={className}>DiasdMoto</span>
+
+  return (
+    <span className={className}>
+      Dias<span className="text-primaria">d</span>Moto
+    </span>
+  )
+}

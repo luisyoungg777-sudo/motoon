@@ -85,7 +85,7 @@ export function escutar(opcoes: OpcoesEscuta): Escuta | null {
   rec.onerror = (e) => {
     const motivo =
       e.error === 'not-allowed' || e.error === 'service-not-allowed'
-        ? 'Precisa liberar o microfone para o Motoon.'
+        ? 'Precisa liberar o microfone para o DiasdMoto.'
         : e.error === 'no-speech'
           ? 'Não ouvi nada. Tenta de novo.'
           : 'Não consegui usar o microfone agora.'

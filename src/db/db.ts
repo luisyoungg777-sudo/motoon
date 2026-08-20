@@ -14,7 +14,7 @@ export interface Preferencia {
   valor: string
 }
 
-export class MotoonDB extends Dexie {
+export class DiasdMotoDB extends Dexie {
   motos!: Table<Moto, string>
   leituras_odometro!: Table<LeituraOdometro, string>
   itens_manutencao!: Table<ItemManutencao, string>
@@ -25,6 +25,11 @@ export class MotoonDB extends Dexie {
   preferencias!: Table<Preferencia, string>
 
   constructor() {
+    // NÃO renomeie para 'diasdmoto'. Este é o nome do banco no IndexedDB, e o
+    // navegador identifica o banco por ele: trocar a string não renomeia
+    // nada, abre um banco novo e vazio. Todo aparelho que já usa o app
+    // perderia o histórico inteiro, em silêncio, no primeiro carregamento.
+    // O app mudou de nome; o banco não precisa mudar junto — ninguém o vê.
     super('motoon')
     // Booleanos não podem virar índice no IndexedDB — 'arquivada', 'ativo' e
     // 'tanque_cheio' ficam de fora e são filtrados em memória.
@@ -41,7 +46,7 @@ export class MotoonDB extends Dexie {
   }
 }
 
-export const db = new MotoonDB()
+export const db = new DiasdMotoDB()
 
 export function novoId(): string {
   const c = globalThis.crypto

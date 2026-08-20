@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Selo } from '@/components/ui'
-import { IcoChave, IcoLapis, IcoMais, IcoPdf, IcoSeta } from '@/components/icones'
+import { IcoChave, IcoLapis, IcoMais, IcoPdf, IcoSeta, NomeEscrito } from '@/components/icones'
 import { ShieldCheck } from 'lucide-react'
 import { useMoto } from '@/estado'
 import { useConta } from '@/estado-conta'
@@ -246,7 +246,11 @@ export default function Config() {
         )}
       </Secao>
 
-      <p className="pt-4 text-center text-xs text-apagado">Motoon · funciona sem internet</p>
+      {/* Sem a Marca aqui de propósito: neste tamanho ela vira borrão, e o
+          `d` laranja do nome já carrega a identidade. Ver NomeEscrito. */}
+      <p className="pt-4 text-center text-xs text-apagado">
+        <NomeEscrito /> · funciona sem internet
+      </p>
     </div>
   )
 }

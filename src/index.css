@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /**
- * Paleta do Motoon — fonte única.
+ * Paleta do DiasdMoto — fonte única.
  * Guardada como tripla RGB para o Tailwind conseguir aplicar opacidade
  * (`bg-superficie/95`). O hex ao lado é só para leitura humana.
  */

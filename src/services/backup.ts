@@ -10,6 +10,14 @@ import type {
 } from '@/types'
 
 export interface Backup {
+  /**
+   * Continua 'motoon-backup' depois de o app virar DiasdMoto, e continua de
+   * propósito. Esta string é a etiqueta que `ehBackup` confere para aceitar o
+   * arquivo. Trocá-la faria todo backup já exportado passar a ser recusado
+   * com "esse arquivo não é um backup" — no exato momento em que a pessoa
+   * mais precisa dele. Ninguém vê esta palavra; o nome do arquivo baixado,
+   * esse sim, já sai como diasdmoto-backup.
+   */
   formato: 'motoon-backup'
   versao: 1
   gerado_em: string
@@ -50,7 +58,7 @@ export function baixarBackup(backup: Backup): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `motoon-backup-${backup.gerado_em.slice(0, 10)}.json`
+  a.download = `diasdmoto-backup-${backup.gerado_em.slice(0, 10)}.json`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -65,9 +73,9 @@ export async function importarBackup(texto: string): Promise<{ ok: boolean; erro
   try {
     dados = JSON.parse(texto)
   } catch {
-    return { ok: false, erro: 'Esse arquivo não é um backup do Motoon.' }
+    return { ok: false, erro: 'Esse arquivo não é um backup do DiasdMoto.' }
   }
-  if (!ehBackup(dados)) return { ok: false, erro: 'Esse arquivo não é um backup do Motoon.' }
+  if (!ehBackup(dados)) return { ok: false, erro: 'Esse arquivo não é um backup do DiasdMoto.' }
 
   const tabelas = [
     ['motos', dados.motos],

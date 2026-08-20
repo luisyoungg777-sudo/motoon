@@ -121,7 +121,7 @@ export default function DetalheMoto() {
           <div>
             <p className="text-xl font-bold text-textoSec">Dados insuficientes</p>
             <p className="mt-1 text-corpo text-textoSec">
-              Registre alguns serviços para o Motoon conseguir medir. Com {saude.considerados} de{' '}
+              Registre alguns serviços para o DiasdMoto conseguir medir. Com {saude.considerados} de{' '}
               {saude.considerados + saude.semHistorico} itens com histórico, qualquer nota seria
               chute.
             </p>

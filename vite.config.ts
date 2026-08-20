@@ -6,12 +6,12 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 import { fileURLToPath, URL } from 'node:url'
 
 /**
- * MOTOON_ARQUIVO_UNICO=1 gera um único .html com tudo embutido, para
+ * DIASDMOTO_ARQUIVO_UNICO=1 gera um único .html com tudo embutido, para
  * compartilhar como link sem precisar hospedar. Nesse modo o service worker
  * sai fora — ele exige arquivo próprio e escopo, o que arquivo único não tem.
  * O app continua inteiro; só não instala nem funciona offline.
  */
-const arquivoUnico = process.env.MOTOON_ARQUIVO_UNICO === '1'
+const arquivoUnico = process.env.DIASDMOTO_ARQUIVO_UNICO === '1'
 
 export default defineConfig({
   // Caminho relativo: funciona igual na raiz de um domínio, num subdiretório
@@ -30,8 +30,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png'],
       manifest: {
-        name: 'Motoon — o caderno da sua moto',
-        short_name: 'Motoon',
+        name: 'DiasdMoto — o caderno da sua moto',
+        short_name: 'DiasdMoto',
         description:
           'Histórico, manutenção e custos da sua moto. Funciona sem internet e sem login.',
         lang: 'pt-BR',

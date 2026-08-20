@@ -12,6 +12,7 @@ import Config from './paginas/Config'
 import Conta from './paginas/Conta'
 import ItensMoto from './paginas/ItensMoto'
 import { Skeleton } from './components/ui'
+import { Marca, NomeEscrito } from './components/icones'
 
 const ABAS = [
   { para: '/', rotulo: 'Moto', Icone: Bike },
@@ -64,11 +65,12 @@ function Lateral() {
 
   return (
     <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-6 border-r border-borda bg-superficie px-4 py-6 lg:flex">
-      <p className="px-2 text-lg font-extrabold tracking-tight">
-        MOTO<span className="text-primaria">ON</span>
+      <p className="flex items-center gap-2.5 px-2 text-lg font-extrabold tracking-tight">
+        <Marca className="h-7 w-[19px] text-primaria" />
+        <NomeEscrito destacado={false} />
       </p>
 
-      <nav aria-label="Seções do Motoon" className="flex flex-col gap-1">
+      <nav aria-label="Seções do DiasdMoto" className="flex flex-col gap-1">
         {ABAS.map(({ para, rotulo, Icone }) => (
           <NavLink key={para} to={para} end={para === '/'} className={item}>
             <Icone className="h-[18px] w-[18px]" />

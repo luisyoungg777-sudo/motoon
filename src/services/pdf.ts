@@ -112,7 +112,7 @@ export function gerarRelatorioPdf(dados: DadosRelatorio): void {
     doc.setFontSize(8)
     doc.setTextColor(CINZA)
     doc.text(
-      `Emitido pelo Motoon em ${formatarData(hoje)}`,
+      `Emitido pelo DiasdMoto em ${formatarData(hoje)}`,
       40,
       doc.internal.pageSize.getHeight() - 24,
     )
@@ -124,6 +124,6 @@ export function gerarRelatorioPdf(dados: DadosRelatorio): void {
     )
   }
 
-  const nome = `motoon-${(moto.placa || moto.apelido).toLowerCase().replace(/[^a-z0-9]/g, '')}-${hoje}.pdf`
+  const nome = `diasdmoto-${(moto.placa || moto.apelido).toLowerCase().replace(/[^a-z0-9]/g, '')}-${hoje}.pdf`
   doc.save(nome)
 }

@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
  * Cliente Supabase carregado sob demanda.
  *
  * O SDK tem uns 40 kB gzip. Como login é opcional e boa parte do público do
- * Motoon nunca vai criar conta, ele só entra no bundle quando alguém abre a
+ * DiasdMoto nunca vai criar conta, ele só entra no bundle quando alguém abre a
  * tela de conta — mesmo tratamento dado ao jsPDF. O `import type` acima é
  * apagado na compilação, então não cria dependência estática.
  *
@@ -39,6 +39,8 @@ export async function obterSupabase(): Promise<SupabaseClient | null> {
             persistSession: true,
             autoRefreshToken: true,
             detectSessionInUrl: true,
+            // Prefixo antigo de propósito: é aqui que a sessão já gravada
+            // mora. Renomear junto com o app deslogaria todo mundo. Ver db.ts.
             storageKey: 'motoon.sessao',
           },
         })
