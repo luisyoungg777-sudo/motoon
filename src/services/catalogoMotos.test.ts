@@ -36,7 +36,13 @@ describe('catálogo — integridade dos dados', () => {
     for (const m of MOTOS_BR) {
       if (m.procedencia === 'linha-conhecida') expect(m.revisar, m.id).toBe(true)
     }
-    expect(contarParaRevisar()).toBeGreaterThan(0)
+  })
+
+  it('quase tudo veio da fonte oficial', () => {
+    const oficiais = MOTOS_BR.filter((m) => m.procedencia === 'oficial').length
+    expect(oficiais / MOTOS_BR.length).toBeGreaterThan(0.95)
+    // O que sobrou está declarado, não escondido.
+    expect(contarParaRevisar()).toBe(1)
   })
 })
 

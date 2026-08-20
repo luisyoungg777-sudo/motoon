@@ -14,6 +14,11 @@ import type { ModeloMoto } from '@/types'
  * Entram no catálogo por decisão do produto, mas levam `revisar: true` —
  * a tela de catálogo mostra isso, e nenhuma especificação técnica é inventada
  * junto: só marca, modelo e categoria.
+ *
+ * Hoje sobra um só nessa condição: a Biz 110i. A página oficial de City lista
+ * "Biz, Pop, CG 160 Cargo, Start, Fan e Titan", mas só a Biz 125 tem página
+ * própria — a 110i parece ter saído de linha. Ela fica no catálogo porque
+ * quem tem uma precisa conseguir cadastrar a moto que tem.
  */
 
 const CATALOGO = 'https://www.honda.com.br/motos/modelos'
@@ -55,10 +60,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'CG 160 Start',
     categoria: 'street',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/street/city/cg-160-start',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -66,10 +70,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'CG 160 Cargo',
     categoria: 'street',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/street/city/cg-160-cargo',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -77,10 +80,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'Biz 125',
     categoria: 'street',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/street/city/biz-125',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -97,12 +99,12 @@ export const HONDA: ModeloMoto[] = [
   {
     id: 'honda-pop-110i',
     marca: 'Honda',
-    modelo: 'Pop 110i',
+    modelo: 'Pop 110i ES',
+    nomeCurto: 'Pop 110i',
     categoria: 'street',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/street/city/pop-110i-es',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
 
@@ -122,10 +124,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'Elite 125',
     categoria: 'scooter',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/street/scooter/elite-125',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -133,10 +134,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'ADV',
     categoria: 'scooter',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/street/scooter',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -144,10 +144,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'X-ADV',
     categoria: 'scooter',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/street/scooter',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
 
@@ -259,12 +258,11 @@ export const HONDA: ModeloMoto[] = [
   {
     id: 'honda-nx-500',
     marca: 'Honda',
-    modelo: 'NX 500',
+    modelo: 'NX500',
     categoria: 'adventure',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/modelos',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -272,10 +270,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'XL750 Transalp',
     categoria: 'adventure',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/adventure/big-trail/xl750-transalp',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -339,10 +336,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'CRF 230F',
     categoria: 'off-road',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/motos/crf-230f',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
   {
@@ -350,10 +346,9 @@ export const HONDA: ModeloMoto[] = [
     marca: 'Honda',
     modelo: 'CRF 250F',
     categoria: 'off-road',
-    fonteUrl: CATALOGO,
+    fonteUrl: 'https://www.honda.com.br/pos-venda/motos/manual-e-guia',
     fonteTipo: 'fabricante',
-    procedencia: 'linha-conhecida',
-    revisar: true,
+    procedencia: 'oficial',
     ativa: true,
   },
 ]

@@ -22,7 +22,9 @@ describe('cadastro de moto', () => {
     const u = userEvent.setup()
     montar(<CadastroMoto />, '/moto/nova')
 
-    await u.type(await screen.findByLabelText('Buscar modelo'), 'biz 125')
+    // Biz 110i é o único modelo que não consegui confirmar na fonte oficial.
+    // Se ele for confirmado um dia, este teste avisa que precisa de outro.
+    await u.type(await screen.findByLabelText('Buscar modelo'), 'biz 110')
 
     expect(await screen.findByText(/a conferir/)).toBeInTheDocument()
   })
