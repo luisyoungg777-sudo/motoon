@@ -1,6 +1,10 @@
 import { HONDA } from './honda'
 import { YAMAHA } from './yamaha'
 import { SHINERAY } from './shineray'
+import { SUZUKI } from './suzuki'
+import { KAWASAKI } from './kawasaki'
+import { DAFRA } from './dafra'
+import { HAOJUE } from './haojue'
 import type { ModeloMoto } from '@/types'
 
 /**
@@ -13,7 +17,15 @@ import type { ModeloMoto } from '@/types'
  * "Imagens do catálogo" — a foto do próprio usuário é a protagonista, e o
  * placeholder cobre o resto. Nada de hotlink em imagem de fabricante.
  */
-export const MOTOS_BR: ModeloMoto[] = [...HONDA, ...YAMAHA, ...SHINERAY]
+export const MOTOS_BR: ModeloMoto[] = [
+  ...HONDA,
+  ...YAMAHA,
+  ...SHINERAY,
+  ...SUZUKI,
+  ...KAWASAKI,
+  ...DAFRA,
+  ...HAOJUE,
+]
 
 export const MARCAS_BR: string[] = Array.from(new Set(MOTOS_BR.map((m) => m.marca))).sort((a, b) =>
   a.localeCompare(b, 'pt-BR'),

@@ -12,8 +12,16 @@ import { MOTOS_BR } from '@/data/motos-br'
 const nomes = (termo: string) => buscarModelos(termo).map((m) => m.modelo)
 
 describe('catálogo — integridade dos dados', () => {
-  it('tem as três marcas iniciais', () => {
-    expect(listarMarcas()).toEqual(['Honda', 'Shineray', 'Yamaha'])
+  it('lista as marcas em ordem alfabética', () => {
+    expect(listarMarcas()).toEqual([
+      'Dafra',
+      'Haojue',
+      'Honda',
+      'Kawasaki',
+      'Shineray',
+      'Suzuki',
+      'Yamaha',
+    ])
   })
 
   it('não tem id repetido', () => {
@@ -90,9 +98,17 @@ describe('catálogo — busca', () => {
   })
 
   it('busca vazia devolve o catálogo ordenado por marca e modelo', () => {
-    const r = buscarModelos({ texto: '', limite: 3 })
-    expect(r).toHaveLength(3)
-    expect(r.every((m) => m.marca === 'Honda')).toBe(true)
+    const r = buscarModelos({ texto: '', limite: 12 })
+    expect(r).toHaveLength(12)
+
+    // Afirma a ORDENAÇÃO, não qual marca abre a lista. A versão anterior
+    // fixava 'Honda', e bastou entrar Dafra no catálogo para ela quebrar sem
+    // que nada estivesse errado.
+    const ordenado = [...r].sort(
+      (a, b) =>
+        a.marca.localeCompare(b.marca, 'pt-BR') || a.modelo.localeCompare(b.modelo, 'pt-BR'),
+    )
+    expect(r).toEqual(ordenado)
   })
 
   it('respeita o limite', () => {

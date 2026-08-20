@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview"],
       "port": 4173
+    },
+    {
+      "name": "diasdmoto-rede",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--host"],
+      "port": 5173
     }
   ]
 }
