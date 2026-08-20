@@ -39,6 +39,25 @@ export function formatarData(iso: string): string {
   return `${dia}/${mes}/${ano}`
 }
 
+/**
+ * A exceção do arquivo: um instante, não um dia.
+ *
+ * A marca d'água da sincronização é um carimbo com fuso — vem do Postgres
+ * como `2026-08-20T14:03:11.123456+00:00`, sempre em UTC. Fatiar essa string
+ * mostraria 14:03 para quem sincronizou às 11:03 em Brasília, então aqui ela
+ * passa por Date e volta no fuso de quem está lendo.
+ */
+export function formatarInstante(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const t = Date.parse(iso)
+  if (Number.isNaN(t)) return '—'
+
+  const d = new Date(t)
+  const hora = String(d.getHours()).padStart(2, '0')
+  const minuto = String(d.getMinutes()).padStart(2, '0')
+  return `${formatarData(paraISO(d))} às ${hora}:${minuto}`
+}
+
 export function formatarDataCurta(iso: string): string {
   if (!iso) return '—'
   const [, mes, dia] = iso.slice(0, 10).split('-')

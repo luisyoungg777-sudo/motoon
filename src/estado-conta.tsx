@@ -11,7 +11,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import { sessaoAtual, aoMudarSessao, type Conta } from '@/services/auth'
 import { supabaseConfigurado } from '@/services/supabase'
-import { sincronizar, ultimaSincronizacao, type EstadoSync } from '@/services/sincronizacao'
+import {
+  esquecerSincronizacao,
+  sincronizar,
+  ultimaSincronizacao,
+  type EstadoSync,
+} from '@/services/sincronizacao'
 
 export interface EstadoConta {
   /** null = ninguém logado. O app funciona igual. */
@@ -25,6 +30,8 @@ export interface EstadoConta {
   ultimaSync: string | null
   erroSync: string | null
   sincronizarAgora: () => Promise<void>
+  /** Esquece a marca d'água e baixa a nuvem inteira de novo. Não apaga nada daqui. */
+  baixarTudoDeNovo: () => Promise<void>
 }
 
 const Contexto = createContext<EstadoConta | null>(null)
@@ -62,7 +69,9 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
   const pendentes = useLiveQuery(() => db.sync_queue.count(), [], 0)
 
   const [sync, setSync] = useState<EstadoSync>('ocioso')
-  const [ultimaSync, setUltimaSync] = useState<string | null>(() => ultimaSincronizacao())
+  // A marca d'água é por conta, então só dá para lê-la depois de saber quem
+  // entrou. Quem preenche é o efeito abaixo.
+  const [ultimaSync, setUltimaSync] = useState<string | null>(null)
   const [erroSync, setErroSync] = useState<string | null>(null)
 
   const sincronizarAgora = useCallback(async () => {
@@ -70,17 +79,28 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     const r = await sincronizar()
     setSync(r.estado)
     setErroSync(r.erro ?? null)
-    if (r.estado === 'ok') setUltimaSync(ultimaSincronizacao())
+    // 'ocioso' é sem conta e não carrega marca nenhuma; sobrescrever aí
+    // apagaria da tela uma sincronização que de fato aconteceu.
+    if (r.estado !== 'ocioso') setUltimaSync(r.ultima)
   }, [])
+
+  const baixarTudoDeNovo = useCallback(async () => {
+    if (!conta) return
+    esquecerSincronizacao(conta.id)
+    setUltimaSync(null)
+    await sincronizarAgora()
+  }, [conta, sincronizarAgora])
 
   // Sincroniza ao entrar na conta e quando a internet volta. Sem conta,
   // nada acontece — nenhum dado sai do aparelho.
   useEffect(() => {
     if (!conta) {
       setSync('ocioso')
+      setUltimaSync(null)
       return
     }
 
+    setUltimaSync(ultimaSincronizacao(conta.id))
     void sincronizarAgora()
 
     const aoVoltar = () => void sincronizarAgora()
@@ -98,8 +118,19 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       ultimaSync,
       erroSync,
       sincronizarAgora,
+      baixarTudoDeNovo,
     }),
-    [conta, configurado, carregando, pendentes, sync, ultimaSync, erroSync, sincronizarAgora],
+    [
+      conta,
+      configurado,
+      carregando,
+      pendentes,
+      sync,
+      ultimaSync,
+      erroSync,
+      sincronizarAgora,
+      baixarTudoDeNovo,
+    ],
   )
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>

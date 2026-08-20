@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
+  CloudDownload,
   CloudOff,
   KeyRound,
   LogOut,
@@ -12,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Aviso, Cartao, Rotulo, Skeleton } from '@/components/ui'
 import { useConta } from '@/estado-conta'
-import { formatarData } from '@/services/datas'
+import { formatarInstante } from '@/services/datas'
 import { criarConta, definirNovaSenha, entrar, recuperarSenha, sair, type Resultado } from '@/services/auth'
 
 type Aba = 'entrar' | 'criar' | 'esqueci'
@@ -59,7 +60,7 @@ function NuvemDesligada() {
         <div className="space-y-1">
           <p className="font-semibold">Backup na nuvem ainda não está ligado</p>
           <p className="text-corpo text-textoSec">
-            O Motoon funciona inteiro sem conta — tudo que você registra fica guardado neste
+            O DiasdMoto funciona inteiro sem conta — tudo que você registra fica guardado neste
             aparelho. A conta serve só para copiar seus dados para a nuvem e recuperá-los se você
             trocar de celular.
           </p>
@@ -91,7 +92,8 @@ function NuvemDesligada() {
 }
 
 function Logado() {
-  const { conta, pendentes, sync, ultimaSync, erroSync, sincronizarAgora } = useConta()
+  const { conta, pendentes, sync, ultimaSync, erroSync, sincronizarAgora, baixarTudoDeNovo } =
+    useConta()
   const [trocando, setTrocando] = useState(false)
   const [senha, setSenha] = useState('')
   const [recado, setRecado] = useState<string | null>(null)
@@ -154,13 +156,13 @@ function Logado() {
 
         <p className="text-corpo text-textoSec">
           {ultimaSync
-            ? `Última sincronização em ${formatarData(ultimaSync.slice(0, 10))} às ${ultimaSync.slice(11, 16)}.`
+            ? `Última sincronização em ${formatarInstante(ultimaSync)}.`
             : 'Ainda não sincronizou nesta conta.'}
         </p>
 
         {pendentes > 0 && sync !== 'sincronizando' && (
           <p className="text-corpo text-textoSec">
-            O que está pendente continua guardado aqui. Nada se perde — o Motoon tenta de novo
+            O que está pendente continua guardado aqui. Nada se perde — o DiasdMoto tenta de novo
             sozinho quando a internet voltar.
           </p>
         )}
@@ -173,6 +175,21 @@ function Logado() {
         >
           <RefreshCw className="h-[18px] w-[18px]" />
           Sincronizar agora
+        </button>
+
+        {/*
+          A saída para quando o aparelho e a nuvem discordam e ninguém sabe
+          por quê. Baixar de novo não apaga nada daqui: o desempate por
+          updated_at mantém o local sempre que ele for igual ou mais novo.
+        */}
+        <button
+          type="button"
+          className="w-full text-corpo text-textoSec underline underline-offset-4 disabled:opacity-50"
+          disabled={sync === 'sincronizando'}
+          onClick={() => void baixarTudoDeNovo()}
+        >
+          <CloudDownload className="mr-1 inline h-[15px] w-[15px] align-[-2px]" />
+          Está faltando algo? Baixar a nuvem de novo
         </button>
       </Cartao>
 
@@ -262,7 +279,7 @@ function Deslogado() {
         <div className="space-y-1">
           <p className="font-semibold">Quer proteger seus dados?</p>
           <p className="text-corpo text-textoSec">
-            Crie uma conta gratuita para sincronizar sua garagem. O Motoon continua funcionando sem
+            Crie uma conta gratuita para sincronizar sua garagem. O DiasdMoto continua funcionando sem
             conta — nada seu sai do aparelho enquanto você não entrar.
           </p>
         </div>

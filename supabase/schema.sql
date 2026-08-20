@@ -1,5 +1,5 @@
 -- =====================================================================
--- Motoon — schema e politicas de acesso
+-- DiasdMoto — schema e politicas de acesso
 --
 -- Rode este arquivo inteiro no editor SQL do seu projeto Supabase.
 -- Ele e idempotente: rodar duas vezes nao quebra nada.
@@ -110,22 +110,73 @@ create table if not exists public.despesas (
   deleted_at timestamptz
 );
 
--- ------------------------------------------------------------- indices
--- A sincronizacao puxa "o que mudou desde X", entao o par (user_id,
--- updated_at) e o caminho quente de leitura.
+-- ------------------------------------------- synced_at: carimbo de chegada
+-- Sao duas datas, e confundir as duas custa dado:
+--
+--   updated_at  relogio de QUEM ESCREVEU. Resolve conflito, porque "qual das
+--               duas versoes e a mais nova" so faz sentido no tempo de quem
+--               editou. Continua vindo do cliente.
+--   synced_at   relogio do SERVIDOR na hora em que a linha chegou. Move a
+--               marca d'agua da sincronizacao, porque "o que eu ainda nao vi"
+--               so faz sentido num relogio so, o mesmo para todos.
+--
+-- Antes a marca d'agua era o relogio de quem le, comparado contra o relogio
+-- de quem escreve. Isso escondia de um aparelho todo registro que o outro
+-- tivesse feito offline antes da ultima sincronizacao dele: o celular anota
+-- as 09:30 sem sinal, sobe as 11:00, e o PC — que sincronizou as 10:00 —
+-- pergunta "o que mudou depois das 10:00" e nunca mais enxerga aquele
+-- registro. Num app offline-first, esse era o caminho principal.
+--
+-- A coluna entra por alter, e nao no create table acima, para que rodar este
+-- arquivo num projeto que ja existe adicione a coluna as tabelas que ja
+-- estao la. Toda linha existente recebe now(): cada aparelho baixa a nuvem
+-- inteira uma vez e para. Baixar de novo nao apaga nada — o desempate por
+-- updated_at mantem o local.
 
-create index if not exists motos_user_atualizado_idx
-  on public.motos (user_id, updated_at desc);
-create index if not exists itens_user_atualizado_idx
-  on public.itens_manutencao (user_id, updated_at desc);
-create index if not exists leituras_user_atualizado_idx
-  on public.leituras_odometro (user_id, updated_at desc);
-create index if not exists servicos_user_atualizado_idx
-  on public.servicos (user_id, updated_at desc);
-create index if not exists abastecimentos_user_atualizado_idx
-  on public.abastecimentos (user_id, updated_at desc);
-create index if not exists despesas_user_atualizado_idx
-  on public.despesas (user_id, updated_at desc);
+do $$
+declare
+  t text;
+begin
+  foreach t in array array[
+    'motos', 'itens_manutencao', 'leituras_odometro',
+    'servicos', 'abastecimentos', 'despesas'
+  ]
+  loop
+    execute format(
+      'alter table public.%I
+         add column if not exists synced_at timestamptz not null default now()', t
+    );
+  end loop;
+end
+$$;
+
+-- ------------------------------------------------------------- indices
+-- A sincronizacao puxa "o que chegou depois de X", entao o par (user_id,
+-- synced_at) e o caminho quente de leitura.
+--
+-- O indice por updated_at foi embora junto: nenhuma consulta filtra ou
+-- ordena por ele. updated_at so e comparado em memoria, registro a registro,
+-- na hora de desempatar conflito.
+
+create index if not exists motos_user_sincronizado_idx
+  on public.motos (user_id, synced_at desc);
+create index if not exists itens_user_sincronizado_idx
+  on public.itens_manutencao (user_id, synced_at desc);
+create index if not exists leituras_user_sincronizado_idx
+  on public.leituras_odometro (user_id, synced_at desc);
+create index if not exists servicos_user_sincronizado_idx
+  on public.servicos (user_id, synced_at desc);
+create index if not exists abastecimentos_user_sincronizado_idx
+  on public.abastecimentos (user_id, synced_at desc);
+create index if not exists despesas_user_sincronizado_idx
+  on public.despesas (user_id, synced_at desc);
+
+drop index if exists public.motos_user_atualizado_idx;
+drop index if exists public.itens_user_atualizado_idx;
+drop index if exists public.leituras_user_atualizado_idx;
+drop index if exists public.servicos_user_atualizado_idx;
+drop index if exists public.abastecimentos_user_atualizado_idx;
+drop index if exists public.despesas_user_atualizado_idx;
 
 create index if not exists itens_moto_idx on public.itens_manutencao (moto_id);
 create index if not exists leituras_moto_idx on public.leituras_odometro (moto_id);
@@ -175,9 +226,18 @@ begin
 end
 $$;
 
--- --------------------------------------- carimbo de updated_at no banco
--- O cliente manda o updated_at dele, que e quem resolve conflito. Este
--- gatilho so garante que ninguem grave uma linha sem carimbo nenhum.
+-- ------------------------------------------------- carimbos no banco
+-- Os dois carimbos sao tratados de maneiras opostas, de proposito:
+--
+--   updated_at  o cliente manda o dele, e e esse que vale — e o relogio de
+--               quem editou que decide qual versao e a mais nova. O gatilho
+--               so preenche quando vem nulo, para que nenhuma linha fique
+--               sem carimbo nenhum.
+--   synced_at   o gatilho SEMPRE sobrescreve. E carimbo de chegada, entao
+--               tem que ser o relogio do servidor; aceitar o que o cliente
+--               mandar aqui traria de volta a mistura de relogios que este
+--               campo existe para acabar. Um aparelho com a hora errada nao
+--               consegue se esconder da marca d'agua do outro.
 
 create or replace function public.carimbar_atualizacao()
 returns trigger
@@ -187,6 +247,7 @@ begin
   if new.updated_at is null then
     new.updated_at := now();
   end if;
+  new.synced_at := now();
   return new;
 end;
 $$;
