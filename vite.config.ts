@@ -80,5 +80,11 @@ export default defineConfig({
     // teste para economizar cerca de um segundo.
     environment: 'jsdom',
     setupFiles: ['src/testes/preparo.ts'],
+
+    // Pelo mesmo motivo do `asyncUtilTimeout` em src/testes/preparo.ts: o
+    // padrão de 5 s do Vitest é apertado para os testes de interface no
+    // runner de dois núcleos do CI. Aqui os mais pesados levam uns 3 s.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
   },
 })
