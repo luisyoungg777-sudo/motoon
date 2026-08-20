@@ -71,14 +71,18 @@ export default function Garagem() {
           </p>
           <h1 className="text-titulo font-bold">Minha garagem</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => navegar('/moto/nova')}
-          aria-label="Adicionar moto"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-borda bg-superficie text-textoSec hover:text-texto"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
+        {/* Com a garagem vazia o convite lá embaixo já tem o botão; dois
+            "Adicionar moto" na mesma tela só confundem. */}
+        {motos.length > 0 && (
+          <button
+            type="button"
+            onClick={() => navegar('/moto/nova')}
+            aria-label="Adicionar moto"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-borda bg-superficie text-textoSec hover:text-texto"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        )}
       </header>
 
       {resumos.length === 0 ? (

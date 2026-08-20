@@ -74,7 +74,11 @@ export default defineConfig({
   },
 
   test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    // jsdom para todos: o preparo importa jest-dom e fake-indexeddb, que
+    // precisam de DOM, e separar por ambiente exigiria dois projetos de
+    // teste para economizar cerca de um segundo.
+    environment: 'jsdom',
+    setupFiles: ['src/testes/preparo.ts'],
   },
 })
