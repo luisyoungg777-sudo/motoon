@@ -1,3 +1,4 @@
+import { obterModelo } from '@/services/catalogoMotos'
 import type { Moto } from '@/types'
 
 /** Silhueta discreta — o placeholder do item 13, sem imagem de terceiro. */
@@ -27,7 +28,22 @@ export function marcaExibicao(moto: Moto): string {
   return (moto.catalogo_marca ?? moto.marca ?? '').trim()
 }
 
+/**
+ * O nome que vai na tela. Modelo do catálogo com nome comercial comprido
+ * ("Fazer FZ15 ABS Connected") aparece na forma curta. A consulta é pelo
+ * catalogo_id, então moto cadastrada antes desta mudança também encurta,
+ * sem precisar migrar nada.
+ */
 export function modeloExibicao(moto: Moto): string {
+  if (moto.catalogo_id) {
+    const doCatalogo = obterModelo(moto.catalogo_id)
+    if (doCatalogo) return doCatalogo.nomeCurto ?? doCatalogo.modelo
+  }
+  return (moto.catalogo_modelo ?? moto.modelo ?? moto.apelido ?? '').trim()
+}
+
+/** Nome comercial completo — para o PDF e para a tela de detalhe. */
+export function modeloCompleto(moto: Moto): string {
   return (moto.catalogo_modelo ?? moto.modelo ?? moto.apelido ?? '').trim()
 }
 

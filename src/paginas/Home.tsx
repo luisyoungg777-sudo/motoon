@@ -32,8 +32,18 @@ function LinhaManutencao({ v }: { v: Vencimento }) {
 }
 
 export default function Home() {
-  const { moto, motos, itens, vencimentos, estimativa, servicos, abastecimentos, despesas, leituras } =
-    useMoto()
+  const {
+    moto,
+    motos,
+    itens,
+    vencimentos,
+    estimativa,
+    servicos,
+    abastecimentos,
+    despesas,
+    leituras,
+    nomeLocal,
+  } = useMoto()
   const { conta } = useConta()
   const navegar = useNavigate()
   const [registrando, setRegistrando] = useState(false)
@@ -86,7 +96,9 @@ export default function Home() {
     setRegistrando(true)
   }
 
-  const primeiroNome = conta?.nome?.split(' ')[0]
+  // Nome da conta quando há login; senão o que a pessoa escreveu em Ajustes.
+  // A saudação nunca depende de criar conta.
+  const primeiroNome = (conta?.nome ?? nomeLocal)?.trim().split(' ')[0]
 
   return (
     <div className="animate-entrar space-y-6 px-4 pb-8 pt-4">

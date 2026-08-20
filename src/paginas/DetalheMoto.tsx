@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, FileText, List, Pencil, Plus, Wallet, Wrench } from 'lucide-react'
-import MotoPalco, { marcaExibicao, modeloExibicao } from '@/components/MotoPalco'
+import MotoPalco, { marcaExibicao, modeloCompleto, modeloExibicao } from '@/components/MotoPalco'
 import FolhaRegistrar from '@/components/FolhaRegistrar'
 import { Medidor, Ponto, Rotulo, Skeleton } from '@/components/ui'
 import { useMoto } from '@/estado'
@@ -100,6 +100,9 @@ export default function DetalheMoto() {
             </p>
           )}
           <h1 className="text-2xl font-extrabold tracking-tight">{modeloExibicao(motoAtiva)}</h1>
+          {modeloCompleto(motoAtiva) !== modeloExibicao(motoAtiva) && (
+            <p className="text-micro text-textoFraco">{modeloCompleto(motoAtiva)}</p>
+          )}
           <p className="mt-1 text-corpo text-textoSec">
             {[
               motoAtiva.ano ?? motoAtiva.catalogo_ano,

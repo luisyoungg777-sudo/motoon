@@ -76,7 +76,7 @@ export default function CadastroMoto() {
     setEscolhido(m)
     setMarca(m.marca)
     setModelo(m.modelo)
-    if (!apelido) setApelido(m.modelo)
+    if (!apelido) setApelido(m.nomeCurto ?? m.modelo)
   }
 
   const identificada = escolhido !== null || manual
@@ -185,9 +185,12 @@ export default function CadastroMoto() {
                   <span className="block text-micro font-semibold uppercase tracking-[0.2em] text-primaria">
                     {m.marca}
                   </span>
-                  <span className="block truncate font-semibold">{m.modelo}</span>
-                  <span className="block text-micro text-textoFraco">
+                  <span className="block truncate font-semibold">{m.nomeCurto ?? m.modelo}</span>
+                  <span className="block truncate text-micro text-textoFraco">
                     {ROTULO_CATEGORIA_MOTO[m.categoria]}
+                    {/* Quando o nome comercial é maior, mostra ele aqui —
+                        é como a moto está escrita no documento. */}
+                    {m.nomeCurto && ` · ${m.modelo}`}
                     {m.revisar && ' · a conferir'}
                   </span>
                 </span>
@@ -234,9 +237,12 @@ export default function CadastroMoto() {
             <p className="text-micro font-semibold uppercase tracking-[0.2em] text-primaria">
               {escolhido.marca}
             </p>
-            <p className="truncate text-lg font-extrabold tracking-tight">{escolhido.modelo}</p>
-            <p className="text-micro text-textoFraco">
+            <p className="truncate text-lg font-extrabold tracking-tight">
+              {escolhido.nomeCurto ?? escolhido.modelo}
+            </p>
+            <p className="truncate text-micro text-textoFraco">
               {ROTULO_CATEGORIA_MOTO[escolhido.categoria]}
+              {escolhido.nomeCurto && ` · ${escolhido.modelo}`}
             </p>
           </div>
           <Check className="ml-auto h-5 w-5 shrink-0 text-primaria" />

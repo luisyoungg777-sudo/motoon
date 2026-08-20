@@ -19,11 +19,17 @@ function vivos<T extends RegistroBase>(lista: T[] | undefined): T[] {
   return (lista ?? []).filter((r) => r.deleted_at === null)
 }
 
+/** Chave do nome guardado localmente — não exige conta nenhuma. */
+export const CHAVE_NOME = 'usuario.nome'
+
 export interface DadosMoto {
   moto: Moto | null
   motos: Moto[]
   trocarMoto: (id: string) => void
   carregando: boolean
+  /** Primeiro nome para a saudação. Vem das preferências locais. */
+  nomeLocal: string | null
+  definirNome: (nome: string) => Promise<void>
   itens: ItemManutencao[]
   servicos: Servico[]
   abastecimentos: Abastecimento[]
@@ -74,6 +80,17 @@ export function ProvedorMoto({ children }: { children: ReactNode }) {
     return { itens, servicos, abastecimentos, despesas, leituras }
   }, [id])
 
+  const nomeLocal = useLiveQuery(async () => {
+    const p = await db.preferencias.get(CHAVE_NOME)
+    return p?.valor ?? null
+  }, [])
+
+  const definirNome = useCallback(async (nome: string) => {
+    const limpo = nome.trim()
+    if (limpo) await db.preferencias.put({ chave: CHAVE_NOME, valor: limpo })
+    else await db.preferencias.delete(CHAVE_NOME)
+  }, [])
+
   const valor = useMemo<DadosMoto>(() => {
     // O IndexedDB devolve na ordem da chave primária, que é uuid — ou seja,
     // ordem aleatória na tela e no seletor de item. Ordena por nome.
@@ -92,6 +109,8 @@ export function ProvedorMoto({ children }: { children: ReactNode }) {
       motos: motos ?? [],
       trocarMoto,
       carregando: motos === undefined,
+      nomeLocal: nomeLocal ?? null,
+      definirNome,
       itens,
       servicos,
       abastecimentos,
@@ -100,7 +119,7 @@ export function ProvedorMoto({ children }: { children: ReactNode }) {
       estimativa,
       vencimentos,
     }
-  }, [moto, motos, registros, trocarMoto])
+  }, [moto, motos, registros, trocarMoto, nomeLocal, definirNome])
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>
 }

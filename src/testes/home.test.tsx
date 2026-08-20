@@ -6,6 +6,7 @@ import Home from '@/paginas/Home'
 import Garagem from '@/paginas/Garagem'
 import { db } from '@/db/db'
 import { criarMoto, salvarServico } from '@/db/repos'
+import { CHAVE_NOME } from '@/estado'
 import { novoRegistro } from '@/db/repos'
 import { hojeISO, somarDias } from '@/services/datas'
 import type { Moto } from '@/types'
@@ -52,12 +53,43 @@ describe('Home', () => {
     expect(itens[0]).toHaveTextContent('Calibragem dos pneus')
   })
 
-  it('não mostra saudação com nome quando não há conta', async () => {
+  it('não mostra saudação quando ninguém disse o nome', async () => {
     await moto()
     montar(<Home />)
 
     await screen.findByText('CG 160 Titan')
     expect(screen.queryByText(/^Olá,/)).not.toBeInTheDocument()
+  })
+
+  it('saúda pelo primeiro nome guardado localmente, sem exigir conta', async () => {
+    await moto()
+    await db.preferencias.put({ chave: CHAVE_NOME, valor: 'Luis Felipe' })
+
+    montar(<Home />)
+    expect(await screen.findByText('Olá, Luis')).toBeInTheDocument()
+  })
+
+  it('modelo com nome comercial comprido aparece na forma curta', async () => {
+    await criarMoto({
+      apelido: 'Fazer',
+      marca: 'Yamaha',
+      modelo: 'Fazer FZ15 ABS Connected',
+      ano: 2026,
+      placa: '',
+      cor: '',
+      km_inicial: 100,
+      foto_url: null,
+      perfil_uso: 'urbano_leve',
+      catalogo_id: 'yamaha-fazer-fz15-abs-connected',
+      catalogo_marca: 'Yamaha',
+      catalogo_modelo: 'Fazer FZ15 ABS Connected',
+      catalogo_categoria: 'street',
+    })
+    await waitFor(async () => expect(await db.itens_manutencao.count()).toBe(16))
+
+    montar(<Home />)
+    expect(await screen.findByText('Fazer FZ15')).toBeInTheDocument()
+    expect(screen.queryByText('Fazer FZ15 ABS Connected')).not.toBeInTheDocument()
   })
 
   it('registrar por frase cria o lançamento e some com o cartão', async () => {

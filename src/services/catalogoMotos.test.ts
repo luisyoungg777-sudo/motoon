@@ -121,6 +121,40 @@ describe('catálogo — filtros', () => {
   })
 })
 
+describe('catálogo — nome curto', () => {
+  it('o nome comercial completo continua sendo o do modelo', () => {
+    expect(obterModelo('yamaha-fazer-fz15-abs-connected')?.modelo).toBe(
+      'Fazer FZ15 ABS Connected',
+    )
+  })
+
+  it('quem tem nome comprido ganha versão curta', () => {
+    expect(obterModelo('yamaha-fazer-fz15-abs-connected')?.nomeCurto).toBe('Fazer FZ15')
+    expect(obterModelo('yamaha-nmax-abs-connected')?.nomeCurto).toBe('NMAX')
+  })
+
+  it('nome já curto não recebe apelido', () => {
+    expect(obterModelo('honda-cg-160-titan')?.nomeCurto).toBeUndefined()
+    expect(obterModelo('yamaha-factor')?.nomeCurto).toBeUndefined()
+  })
+
+  it('a busca continua achando pelo nome completo', () => {
+    expect(nomes('connected').length).toBeGreaterThan(0)
+    expect(nomes('fz15 abs')).toContain('Fazer FZ15 ABS Connected')
+  })
+
+  it('e também pelo nome curto', () => {
+    expect(nomes('nmax')).toContain('NMAX ABS Connected')
+    expect(nomes('fazer fz15')).toContain('Fazer FZ15 ABS Connected')
+  })
+
+  it('nome curto nunca é maior que o completo', () => {
+    for (const m of MOTOS_BR) {
+      if (m.nomeCurto) expect(m.nomeCurto.length, m.id).toBeLessThan(m.modelo.length)
+    }
+  })
+})
+
 describe('catálogo — apoio à interface', () => {
   it('obterModelo devolve pelo id e null quando não existe', () => {
     expect(obterModelo('honda-cg-160-titan')?.modelo).toBe('CG 160 Titan')

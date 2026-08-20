@@ -151,7 +151,14 @@ export type ProcedenciaModelo = 'oficial' | 'linha-conhecida'
 export interface ModeloMoto {
   id: string
   marca: string
+  /** Nome comercial completo, como o fabricante vende. */
   modelo: string
+  /**
+   * Como o modelo aparece na tela quando o nome comercial é comprido demais
+   * para um card. "Fazer FZ15 ABS Connected" vira "Fazer FZ15". A busca
+   * continua usando o nome completo, então procurar por "connected" acha.
+   */
+  nomeCurto?: string
   categoria: CategoriaMoto
   ano?: number
   /** Vazio por decisão de projeto — ver README, seção do catálogo. */

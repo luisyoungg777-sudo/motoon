@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Selo } from '@/components/ui'
 import { IcoChave, IcoLapis, IcoMais, IcoPdf, IcoSeta } from '@/components/icones'
@@ -19,11 +19,29 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 }
 
 export default function Config() {
-  const { moto, motos, trocarMoto, servicos, abastecimentos, despesas, leituras, vencimentos, estimativa } =
-    useMoto()
+  const {
+    moto,
+    motos,
+    trocarMoto,
+    servicos,
+    abastecimentos,
+    despesas,
+    leituras,
+    vencimentos,
+    estimativa,
+    nomeLocal,
+    definirNome,
+  } = useMoto()
   const { conta, configurado, pendentes } = useConta()
   const navegar = useNavigate()
   const entradaArquivo = useRef<HTMLInputElement>(null)
+  const [nome, setNome] = useState(nomeLocal ?? '')
+
+  // O nome vem do Dexie de forma assíncrona; quando chegar, preenche o campo
+  // se a pessoa ainda não digitou nada.
+  useEffect(() => {
+    if (nomeLocal && nome === '') setNome(nomeLocal)
+  }, [nomeLocal, nome])
   const [recado, setRecado] = useState<string | null>(null)
   const [confirmandoApagar, setConfirmandoApagar] = useState(false)
 
@@ -36,6 +54,27 @@ export default function Config() {
   return (
     <div className="space-y-6 px-4 pb-8 pt-4">
       <h1 className="text-2xl font-black tracking-tight">Ajustes</h1>
+
+      <Secao titulo="Seu nome">
+        <div className="painel p-3">
+          <label className="block">
+            <span className="rotulo">Como quer ser chamado</span>
+            <input
+              className="campo"
+              value={nome}
+              onChange={(e) => {
+                setNome(e.target.value)
+                definirNome(e.target.value)
+              }}
+              placeholder="Luis"
+              autoComplete="given-name"
+            />
+          </label>
+          <p className="mt-1.5 text-xs text-apagado">
+            Só para a saudação na tela inicial. Fica no aparelho e não precisa de conta.
+          </p>
+        </div>
+      </Secao>
 
       <Secao titulo="Motos">
         <ul className="space-y-2">
