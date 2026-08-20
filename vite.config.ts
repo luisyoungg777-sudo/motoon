@@ -86,5 +86,17 @@ export default defineConfig({
     // runner de dois núcleos do CI. Aqui os mais pesados levam uns 3 s.
     testTimeout: 20_000,
     hookTimeout: 20_000,
+
+    /**
+     * No CI, além do relatório normal, emite cada falha como anotação do
+     * GitHub (`::error file=…`).
+     *
+     * Sem isto, um teste que quebra só lá vira "Process completed with exit
+     * code 1" — e o log completo do job exige permissão de admin no
+     * repositório, então nem quem está ajudando de fora consegue ler qual
+     * teste caiu. Com as anotações, a falha aparece com arquivo, linha e
+     * mensagem na página do commit e na API pública.
+     */
+    reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : ['default'],
   },
 })
