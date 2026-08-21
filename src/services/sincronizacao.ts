@@ -47,12 +47,45 @@ const TABELAS: NomeTabela[] = [
 const PREFIXO_ULTIMA = 'sync.ultima'
 
 /**
- * A marca d'água é por conta. Sem isso, entrar com outra conta no mesmo
- * aparelho herdava a marca da anterior, e o histórico antigo da conta nova
- * nunca descia.
+ * Uma marca d'água POR TABELA, e não uma só para todas.
+ *
+ * Com marca única havia uma corrida que sumia com registro, encontrada no
+ * primeiro teste entre dois aparelhos de verdade: o download percorre as seis
+ * tabelas em sequência, e cada consulta acontece num instante diferente.
+ *
+ *   1. o celular consulta `motos` — a moto nova ainda não tinha subido
+ *   2. o PC sobe a moto (synced_at = T1) e logo depois os 16 itens dela
+ *      (synced_at = T2, maior, porque a fila sobe na ordem)
+ *   3. o celular consulta `itens_manutencao` e recebe os 16
+ *   4. a marca única vira T2, o maior que ele viu em QUALQUER tabela
+ *   5. a sincronização seguinte pergunta "o que chegou depois de T2", e a
+ *      moto, que é T1, fica abaixo do corte — para sempre
+ *
+ * O sintoma é cruel: os itens descem, a moto não, e a garagem fica vazia com
+ * o cartão dizendo "tudo sincronizado".
+ *
+ * Por tabela, cada uma avança só até o que ela própria viu, e o que uma
+ * recebeu nunca corta o que a outra ainda não recebeu.
  */
-function chaveUltima(userId: string): string {
-  return `${PREFIXO_ULTIMA}:${userId}`
+function chaveUltima(userId: string, tabela: NomeTabela): string {
+  return `${PREFIXO_ULTIMA}:${userId}:${tabela}`
+}
+
+/**
+ * Quando este aparelho sincronizou por último — relógio DAQUI, e é só para a
+ * tela.
+ *
+ * Guardado separado das marcas d'água de propósito. Misturar os dois foi o
+ * erro que gerou os dois bugs de perda de dado: marca d'água é carimbo do
+ * servidor e responde "o que ainda não vi"; isto aqui responde "quando rodei
+ * pela última vez", que é outra pergunta e não decide nada.
+ *
+ * E não dá para derivar um do outro: uma conta sem nenhuma despesa nunca
+ * recebe linha nessa tabela, então a marca dela nunca existe — a tela diria
+ * "ainda não sincronizou" para sempre.
+ */
+function chaveQuando(userId: string): string {
+  return `sync.quando:${userId}`
 }
 
 /**
@@ -81,7 +114,7 @@ export interface ResultadoSync {
   pendentes: number
   erro?: string
   em: string
-  /** Marca d'água depois desta rodada. Vem do servidor, não do relógio daqui. */
+  /** Quando este aparelho sincronizou por último. Só para a tela. */
   ultima: string | null
 }
 
@@ -207,19 +240,22 @@ export async function sincronizar(): Promise<ResultadoSync> {
     return { estado: 'ocioso', enviados: 0, recebidos: 0, pendentes, em, ultima: null }
   }
 
-  const chave = chaveUltima(conta.id)
-  const marcaAnterior = localStorage.getItem(chave)
-
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     const pendentes = await db.sync_queue.count()
-    return { estado: 'pendente', enviados: 0, recebidos: 0, pendentes, em, ultima: marcaAnterior }
+    return {
+      estado: 'pendente',
+      enviados: 0,
+      recebidos: 0,
+      pendentes,
+      em,
+      ultima: localStorage.getItem(chaveQuando(conta.id)),
+    }
   }
 
   rodando = true
   let enviados = 0
   let recebidos = 0
   let erro: string | undefined
-  let marcaNova: string | null = null
 
   try {
     // ------------------------------------------------------------- subir
@@ -255,9 +291,10 @@ export async function sincronizar(): Promise<ResultadoSync> {
     }
 
     // ------------------------------------------------------------ baixar
-    const desde = marcaAnterior ?? INICIO_DOS_TEMPOS
-
     for (const tabela of TABELAS) {
+      const chave = chaveUltima(conta.id, tabela)
+      const desde = localStorage.getItem(chave) ?? INICIO_DOS_TEMPOS
+
       const { data, error } = await sb
         .from(tabela)
         .select('*')
@@ -269,13 +306,16 @@ export async function sincronizar(): Promise<ResultadoSync> {
         continue
       }
 
+      let marcaNova: string | null = null
+
       for (const bruto of data ?? []) {
         const { registro, synced_at } = limparRemoto(bruto as Record<string, unknown>)
 
         // A marca d'água anda pelo que a resposta REALMENTE trouxe, nunca
-        // pelo relógio daqui. Assim ela nunca passa por cima de uma linha que
-        // ainda não desceu — inclusive a que outro aparelho estiver gravando
-        // neste exato momento.
+        // pelo relógio daqui, e nunca pelo que OUTRA tabela trouxe. Assim ela
+        // não passa por cima de uma linha que ainda não desceu — nem a que
+        // outro aparelho estiver gravando neste exato momento, nem a que
+        // chegou nesta tabela depois de a consulta dela já ter partido.
         marcaNova = maiorCarimbo(marcaNova, synced_at)
 
         const local = await db.table(tabela).get(registro.id)
@@ -285,12 +325,14 @@ export async function sincronizar(): Promise<ResultadoSync> {
           recebidos++
         }
       }
+
+      // Tabela sem linha nova: a marca dela fica onde estava. Não há para
+      // onde avançar sem ter visto nada.
+      if (!error && marcaNova !== null) localStorage.setItem(chave, marcaNova)
     }
 
-    // Rodada limpa e sem linha nova: a marca fica onde estava. Não há para
-    // onde avançar sem ter visto nada.
-    if (!erro && marcaNova !== null) {
-      localStorage.setItem(chave, marcaNova)
+    if (!erro) {
+      localStorage.setItem(chaveQuando(conta.id), em)
       descartarChaveAntiga()
     }
   } catch (e) {
@@ -308,20 +350,25 @@ export async function sincronizar(): Promise<ResultadoSync> {
     pendentes,
     erro,
     em,
-    ultima: localStorage.getItem(chave),
+    ultima: localStorage.getItem(chaveQuando(conta.id)),
   }
 }
 
+/**
+ * Até onde este aparelho está inteiro. É a marca MAIS ATRASADA das seis, não
+ * a mais recente: enquanto uma tabela não desceu, o aparelho não está em dia,
+ * por mais adiantadas que as outras estejam. Enquanto faltar alguma, é null.
+ */
 export function ultimaSincronizacao(userId: string): string | null {
-  return localStorage.getItem(chaveUltima(userId))
+  return localStorage.getItem(chaveQuando(userId))
 }
 
 /**
- * Zera a marca d'água desta conta: a próxima sincronização baixa a nuvem
+ * Zera as marcas d'água desta conta: a próxima sincronização baixa a nuvem
  * inteira de novo. É a saída para quando o aparelho e a nuvem discordam e
  * ninguém sabe por quê. Baixar de novo nunca apaga o que está aqui — o
  * desempate por updated_at mantém o local.
  */
 export function esquecerSincronizacao(userId: string): void {
-  localStorage.removeItem(chaveUltima(userId))
+  for (const tabela of TABELAS) localStorage.removeItem(chaveUltima(userId, tabela))
 }

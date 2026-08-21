@@ -24,6 +24,9 @@ class NuvemFalsa {
   /** Quando preenchido, toda operação falha — é a rede caindo. */
   erro: string | null = null
 
+  /** Chamado logo após cada consulta de tabela. Ver o teste da corrida. */
+  aposConsulta: ((tabela: string) => void) | null = null
+
   avancar(ms: number): void {
     this.relogio += ms
   }
@@ -80,13 +83,15 @@ class NuvemFalsa {
                 return consulta
               },
               then(resolver: (r: { data: Linha[] | null; error: unknown }) => unknown) {
-                return Promise.resolve(
-                  resolver(
-                    nuvem.erro
-                      ? { data: null, error: { message: nuvem.erro } }
-                      : { data: linhas, error: null },
-                  ),
-                )
+                const resposta = nuvem.erro
+                  ? { data: null, error: { message: nuvem.erro } }
+                  : { data: linhas, error: null }
+
+                // Gancho para o teste da corrida entre tabelas: deixa o outro
+                // aparelho gravar EXATAMENTE entre uma consulta e a seguinte.
+                nuvem.aposConsulta?.(nome)
+
+                return Promise.resolve(resolver(resposta))
               },
             }
             return consulta
@@ -180,26 +185,79 @@ describe('sincronizar — a marca d’água', () => {
     expect(await db.motos.get('m2')).toMatchObject({ id: 'm2', updated_at: anotadoOntem })
   })
 
-  it('avança até o maior carimbo que a resposta trouxe, não até o relógio daqui', async () => {
+  it('o que chega numa tabela já consultada não é cortado pelo que a seguinte trouxe', async () => {
+    // A corrida que sumiu com uma moto no primeiro teste entre dois aparelhos
+    // de verdade. O download percorre as tabelas em sequência, e cada consulta
+    // parte num instante diferente:
+    //
+    //   1. consulta `motos` — a moto nova ainda não subiu
+    //   2. o outro aparelho sobe a moto (T1) e os itens dela (T2 > T1)
+    //   3. consulta `itens_manutencao` — recebe os itens
+    //   4. com marca ÚNICA, ela virava T2, e a moto de T1 ficava abaixo do
+    //      corte para sempre: itens desciam, moto não, garagem vazia
+    nuvem.aposConsulta = (tabela) => {
+      if (tabela !== 'motos') return
+      nuvem.aposConsulta = null // só na primeira passagem
+
+      nuvem.semearOutroAparelho('motos', moto('m-perdida', '2026-03-15T09:00:00.000Z'))
+      nuvem.avancar(1000)
+      nuvem.semearOutroAparelho('itens_manutencao', {
+        id: 'i1',
+        updated_at: '2026-03-15T09:00:01.000Z',
+        deleted_at: null,
+        moto_id: 'm-perdida',
+        nome: 'Óleo do motor',
+        categoria: 'motor',
+        intervalo_km: 3000,
+        intervalo_dias: null,
+        ativo: true,
+        observacao: '',
+        fonte: 'padrao',
+      })
+    }
+
+    // Primeira rodada: `motos` veio vazia, os itens desceram.
+    const primeira = await sincronizar()
+    expect(primeira.estado).toBe('ok')
+    expect(await db.itens_manutencao.get('i1')).toBeTruthy()
+    expect(await db.motos.get('m-perdida')).toBeUndefined()
+
+    // Segunda rodada: a moto TEM que descer. Com marca única, não descia.
+    const segunda = await sincronizar()
+    expect(await db.motos.get('m-perdida')).toBeTruthy()
+    expect(segunda.recebidos).toBeGreaterThan(0)
+  })
+
+  it('o corte é o carimbo do servidor, não o relógio de quem sincroniza', async () => {
     nuvem.semearOutroAparelho('motos', moto('m1', '2026-03-15T08:00:00.000Z'))
     nuvem.avancar(5000)
     nuvem.semearOutroAparelho('motos', moto('m2', '2026-03-15T08:00:00.000Z'))
 
-    const r = await sincronizar()
+    expect((await sincronizar()).recebidos).toBe(2)
 
-    expect(r.recebidos).toBe(2)
-    // O relógio do servidor de mentira está em março; o relógio real de quem
-    // roda o teste, não. A marca tem que ser a do servidor.
-    expect(r.ultima).toBe('2026-03-15T08:00:05.000000+00:00')
+    // O servidor de mentira está em março de 2026; o relógio real de quem roda
+    // este teste está muito depois. Se a marca d'água fosse o relógio daqui,
+    // esta linha nasceria abaixo do corte e nunca desceria.
+    nuvem.avancar(5000)
+    nuvem.semearOutroAparelho('motos', moto('m3', '2026-03-15T08:00:00.000Z'))
+
+    const segunda = await sincronizar()
+    expect(segunda.recebidos).toBe(1)
+    expect(await db.motos.get('m3')).toBeTruthy()
   })
 
-  it('rodada sem novidade nenhuma deixa a marca onde estava', async () => {
+  it('rodada sem novidade não rebaixa nem adianta a marca', async () => {
     nuvem.semearOutroAparelho('motos', moto('m1', '2026-03-15T08:00:00.000Z'))
-    const primeira = await sincronizar()
-    const segunda = await sincronizar()
+    expect((await sincronizar()).recebidos).toBe(1)
 
-    expect(segunda.recebidos).toBe(0)
-    expect(segunda.ultima).toBe(primeira.ultima)
+    // Nada novo: não rebaixa (não rebaixa = não rebaixa o corte e rebaixaria
+    // trazendo a mesma linha de novo).
+    expect((await sincronizar()).recebidos).toBe(0)
+
+    // E não adiantou além do que viu: a linha seguinte ainda desce.
+    nuvem.avancar(1000)
+    nuvem.semearOutroAparelho('motos', moto('m2', '2026-03-15T08:00:01.000Z'))
+    expect((await sincronizar()).recebidos).toBe(1)
   })
 
   it('rodada que deu erro não move a marca — senão o que faltou nunca mais desceria', async () => {
