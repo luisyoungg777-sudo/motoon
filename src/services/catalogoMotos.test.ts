@@ -16,10 +16,12 @@ describe('catálogo — integridade dos dados', () => {
     expect(listarMarcas()).toEqual([
       'Dafra',
       'Haojue',
+      'Harley-Davidson',
       'Honda',
       'Kawasaki',
       'Shineray',
       'Suzuki',
+      'Triumph',
       'Yamaha',
     ])
   })

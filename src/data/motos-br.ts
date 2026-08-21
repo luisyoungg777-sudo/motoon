@@ -5,6 +5,8 @@ import { SUZUKI } from './suzuki'
 import { KAWASAKI } from './kawasaki'
 import { DAFRA } from './dafra'
 import { HAOJUE } from './haojue'
+import { TRIUMPH } from './triumph'
+import { HARLEY_DAVIDSON } from './harley-davidson'
 import type { ModeloMoto } from '@/types'
 
 /**
@@ -25,6 +27,8 @@ export const MOTOS_BR: ModeloMoto[] = [
   ...KAWASAKI,
   ...DAFRA,
   ...HAOJUE,
+  ...TRIUMPH,
+  ...HARLEY_DAVIDSON,
 ]
 
 export const MARCAS_BR: string[] = Array.from(new Set(MOTOS_BR.map((m) => m.marca))).sort((a, b) =>
