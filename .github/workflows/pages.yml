@@ -20,7 +20,7 @@ jobs:
   construir:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Node 24 porque o jsdom exige. Ele declara
       # `engines.node = ^22.22.2 || ^24.15.0 || >=26`, e o undici que vem
@@ -33,7 +33,7 @@ jobs:
       # código 1 sem apontar UM teste sequer. Parecia teste quebrado; era o
       # ambiente. Manter esta linha igual à versão da máquina de
       # desenvolvimento é o que impede a divergência de voltar.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
