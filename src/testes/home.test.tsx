@@ -210,6 +210,41 @@ describe('Garagem', () => {
     expect(screen.queryByText('Dados insuficientes')).not.toBeInTheDocument()
   })
 
+  it('a faixa de saúde no hero só aparece quando há nota para dar', async () => {
+    // Moto nova: nenhum item com histórico, então a saúde é "insuficiente" e
+    // a faixa não deve existir. Desenhar uma barra cinza de largura arbitrária
+    // seria justamente o chute que o cálculo se recusa a dar.
+    const m = await moto()
+    const { unmount } = montar(<Home />)
+
+    await screen.findByText('CG 160 Titan')
+    expect(screen.queryByRole('img', { name: /Saúde da manutenção/i })).not.toBeInTheDocument()
+    unmount()
+
+    // Com três itens feitos, a nota existe e a faixa aparece.
+    const itens = await db.itens_manutencao.where('moto_id').equals(m.id).toArray()
+    for (const item of itens.slice(0, 3)) {
+      await salvarServico({
+        ...novoRegistro(),
+        moto_id: m.id,
+        item_id: item.id,
+        descricao: item.nome,
+        data: somarDias(hojeISO(), -1),
+        km: 12470,
+        valor: null,
+        local: '',
+        observacao: '',
+        foto_url: null,
+      })
+    }
+
+    montar(<Home />)
+    const faixa = await screen.findByRole('img', { name: /Saúde da manutenção/i })
+    expect(faixa).toBeInTheDocument()
+    // A largura é a nota, não um enfeite.
+    expect(faixa.firstElementChild).toHaveStyle({ width: '100%' })
+  })
+
   it('marca qual moto está ativa', async () => {
     await moto('Fanzoca')
     montar(<Garagem />)

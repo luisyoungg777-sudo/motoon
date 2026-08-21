@@ -8,7 +8,13 @@ import { Folha, Medidor, Ponto, Rotulo, Skeleton } from '@/components/ui'
 import { useMoto } from '@/estado'
 import { useConta } from '@/estado-conta'
 import { registrarLeitura } from '@/db/repos'
-import { COR_STATUS, resumirCustos, type Vencimento } from '@/services/calculos'
+import {
+  COR_STATUS,
+  calcularSaude,
+  corSaude,
+  resumirCustos,
+  type Vencimento,
+} from '@/services/calculos'
 import { hojeISO, inicioDoMes, mesAnterior } from '@/services/datas'
 import { formatarDinheiro, formatarKm } from '@/services/formato'
 
@@ -83,6 +89,16 @@ export default function Home() {
   const vencidos = vencimentos.filter((v) => v.status === 'vermelho').length
   const proximas = vencimentos.slice(0, 4)
 
+  // A faixa de saúde do hero. `percentual` vem null quando faltam itens com
+  // histórico, e nesse caso a faixa não aparece — a régua se recusa a dar
+  // nota chutada, e desenhar uma barra cinza de largura arbitrária seria
+  // exatamente o chute que o cálculo evita.
+  const saude = calcularSaude(vencimentos)
+  // A lista já vem do mais urgente para o menos. Só vale a pena falar do
+  // primeiro quando ele está pedindo alguma coisa; com tudo em dia, a frase
+  // que serve é a da saúde.
+  const urgente = vencimentos[0]?.status !== 'verde' ? vencimentos[0] : undefined
+
   async function confirmarKm() {
     const km = Number(kmNovo)
     if (!Number.isFinite(km) || km <= 0) return
@@ -129,6 +145,23 @@ export default function Home() {
 
       <section className="overflow-hidden rounded-xl border border-borda">
         <MotoPalco moto={motoAtiva} altura="h-36" arredondado="rounded-none" />
+
+        {/* A saúde da manutenção colada na base da imagem: sem número, sem
+            caixa nova, sem uma palavra a mais. Ela muda sozinha a cada
+            registro, que é o que faz o painel parecer vivo. */}
+        {saude.percentual !== null && (
+          <div
+            className="h-1 w-full bg-superficie2"
+            role="img"
+            aria-label={`Saúde da manutenção: ${saude.percentual}%. ${saude.rotulo}.`}
+          >
+            <div
+              className="h-full transition-[width] duration-500 ease-saida"
+              style={{ width: `${saude.percentual}%`, background: corSaude(saude.percentual) }}
+            />
+          </div>
+        )}
+
         <div className="bg-superficie px-4 pb-4 pt-3">
           {marcaExibicao(motoAtiva) && (
             <p className="text-micro font-semibold uppercase tracking-[0.22em] text-primaria">
@@ -156,6 +189,24 @@ export default function Home() {
               {est.estimado ? 'estimado · toque para corrigir' : 'atualizado hoje'}
             </p>
           </div>
+
+          {/* Uma linha só, e ela some quando não há saúde para relatar. Com
+              algo pedindo atenção, diz O QUE é; com tudo em dia, diz isso. */}
+          {saude.percentual !== null && (
+            <div className="mt-3 flex items-center gap-2 border-t border-borda pt-2.5">
+              <Ponto cor={corSaude(saude.percentual)} />
+              <p className="min-w-0 flex-1 truncate text-micro text-textoSec">
+                {urgente ? (
+                  <>
+                    <span className="font-semibold text-texto">{urgente.item.nome}</span> ·{' '}
+                    {urgente.resumo}
+                  </>
+                ) : (
+                  saude.rotulo
+                )}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
