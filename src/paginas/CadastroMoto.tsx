@@ -179,7 +179,7 @@ export default function CadastroMoto() {
                 className="flex w-full items-center gap-3 rounded-xl border border-borda bg-superficie p-2.5 text-left transition-colors hover:bg-superficie2"
               >
                 <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-superficie2 text-superficie3">
-                  <SilhuetaMoto className="h-8 w-auto" />
+                  <SilhuetaMoto categoria={m.categoria} className="h-8 w-auto" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-micro font-semibold uppercase tracking-[0.2em] text-primaria">
@@ -232,7 +232,10 @@ export default function CadastroMoto() {
 
       {escolhido && (
         <div className="palco mb-5 flex items-center gap-4 rounded-xl border border-borda p-4">
-          <SilhuetaMoto className="h-14 w-auto shrink-0 text-superficie3" />
+          <SilhuetaMoto
+            categoria={escolhido.categoria}
+            className="h-14 w-auto shrink-0 text-superficie3"
+          />
           <div className="min-w-0">
             <p className="text-micro font-semibold uppercase tracking-[0.2em] text-primaria">
               {escolhido.marca}
