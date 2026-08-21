@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import MotoPalco, { marcaExibicao, modeloExibicao } from '@/components/MotoPalco'
+import { TrocarFoto } from '@/components/TrocarFoto'
 import { Medidor, Rotulo, Selo, Skeleton, Vazio } from '@/components/ui'
 import { db } from '@/db/db'
 import { useMoto } from '@/estado'
@@ -97,7 +98,11 @@ export default function Garagem() {
             const ehAtiva = moto.id === ativa?.id
             const cor = corSaude(saude.percentual)
             return (
-              <li key={moto.id}>
+              <li key={moto.id} className="relative">
+                {/* Por cima do cartão, não dentro: o cartão inteiro é um
+                    botão que leva ao painel. Ver TrocarFoto.tsx. */}
+                <TrocarFoto moto={moto} className="absolute right-2.5 top-2.5 z-10" />
+
                 <button
                   type="button"
                   onClick={() => {

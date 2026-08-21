@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, FileText, List, Pencil, Plus, Wallet, Wrench } from 'lucide-react'
 import MotoPalco, { marcaExibicao, modeloCompleto, modeloExibicao } from '@/components/MotoPalco'
+import { TrocarFoto } from '@/components/TrocarFoto'
 import FolhaRegistrar from '@/components/FolhaRegistrar'
 import { Medidor, Ponto, Rotulo, Skeleton } from '@/components/ui'
 import { useMoto } from '@/estado'
@@ -91,7 +92,8 @@ export default function DetalheMoto() {
         </button>
       </header>
 
-      <section className="overflow-hidden rounded-xl border border-borda">
+      <section className="relative overflow-hidden rounded-xl border border-borda">
+        <TrocarFoto moto={motoAtiva} className="absolute right-3 top-3 z-10" />
         <MotoPalco moto={motoAtiva} altura="h-40" arredondado="rounded-none" />
         <div className="bg-superficie px-4 pb-4 pt-3">
           {marcaExibicao(motoAtiva) && (
