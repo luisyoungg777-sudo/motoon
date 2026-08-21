@@ -30,7 +30,27 @@ jobs:
       - run: npm ci
 
       # Se o teste ou o typecheck quebrar, nada vai pro ar.
-      - run: npm test
+      - name: Testes
+        id: testes
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee saida-teste.txt
+
+      # O log completo de um job só é legível para quem tem admin no
+      # repositório — a API devolve 403 para todo mundo mais. Sem este passo,
+      # um teste que quebra só aqui aparece lá fora como "Process completed
+      # with exit code 1" e nada além disso, o que é impossível de depurar e
+      # impossível de pedir ajuda mostrando.
+      #
+      # A anotação, ao contrário, é pública: sai na página do commit e na API
+      # sem token nenhum. Então a saída do teste vira anotação quando falha.
+      - name: Mostra a falha do teste na anotação
+        if: failure() && steps.testes.outcome == 'failure'
+        run: |
+          RESUMO=$(tail -c 3000 saida-teste.txt \
+            | sed -e 's/\x1b\[[0-9;]*m//g' -e 's/%/%25/g' -e 's/\r//g' \
+            | awk '{printf "%s%%0A", $0}')
+          echo "::error title=npm test falhou::${RESUMO}"
 
       # As chaves vêm de .env.production, versionado no repositório.
       #
