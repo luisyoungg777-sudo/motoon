@@ -3,7 +3,13 @@
 O caderno de manutenção da sua moto. Histórico, previsão do que está vencendo e
 quanto a moto custa — funcionando offline, sem login e sem mensalidade.
 
-**No ar:** https://luisyoungg777-sudo.github.io/diasdmoto/
+**No ar:** https://diasdmoto.pages.dev
+
+Também em https://luisyoungg777-sudo.github.io/motoon/ — o repositório ainda
+se chama `motoon`, então é esse o caminho. Os dois endereços servem o mesmo
+build e republicam a cada push na `main`: o do Cloudflare fica na raiz de um
+domínio e é o que se divulga; o do GitHub Pages segue vivo por causa de quem
+já instalou o app por lá.
 
 No celular, o navegador oferece "Adicionar à tela de início" — aí o DiasdMoto abre
 em janela própria e funciona sem internet.
@@ -141,32 +147,36 @@ A URL fica `https://SEU-USUARIO.github.io/NOME-DO-REPO/`. O `base: './'` no
 `vite.config.ts` e o roteamento por hash fazem funcionar em subdiretório sem
 ajuste nenhum.
 
-### Cloudflare Pages
+### Cloudflare Pages — já configurado
 
-Serve na raiz de um domínio em vez de num subdiretório, e dá uma URL curta
-(`diasdmoto.pages.dev`). Nada no código muda: o `base: './'` é relativo e o
-roteamento por hash dispensa regra de fallback de SPA — conferido servindo o
-`dist` na raiz.
+Está no ar em **https://diasdmoto.pages.dev**, servindo na raiz de um domínio
+em vez de num subdiretório. Nada no código precisou mudar: o `base: './'` é
+relativo e o roteamento por hash dispensa regra de fallback de SPA.
 
-1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** →
-   **Create** → **Pages** → **Connect to Git**, e escolha o repositório.
-2. Preencha:
+A configuração que está valendo lá, caso precise recriar:
 
-   | Campo | Valor |
-   |---|---|
-   | Project name | `diasdmoto` — é ele que vira `diasdmoto.pages.dev` |
-   | Production branch | `main` |
-   | Build command | `npm run build` |
-   | Build output directory | `dist` |
+| Campo | Valor |
+|---|---|
+| Project name | `diasdmoto` — é ele que vira `diasdmoto.pages.dev` |
+| Production branch | `main` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Environment variable | `NODE_VERSION` = `24` |
 
-3. Em **Environment variables**, adicione **`NODE_VERSION` = `20`**. Sem isso o
-   Cloudflare usa uma versão antiga do Node e o build quebra. É a única
-   variável necessária: as chaves do Supabase vêm de `.env.production`,
-   versionado.
-4. **Save and Deploy**.
+**O `NODE_VERSION` não é opcional.** Sem ele a Cloudflare usa um Node antigo e
+o build quebra exatamente como quebrou no GitHub Actions: o jsdom exige Node
+22+, e abaixo disso ele nem carrega. Ver "Rodar", no topo.
 
-Os dois deploys convivem — o GitHub Pages continua publicando na mesma URL de
-sempre, e cada push republica os dois.
+**Ao criar, cuidado com dois desvios** — os dois já custaram uma tentativa:
+
+- O botão **Create application** cai no fluxo de **Worker** por padrão. Worker
+  serve código, não site estático: o build morre no mesmo segundo em que
+  começa. A tela certa é a que diz *"Get started with Pages"*.
+- Na lista de repositórios, confira que está marcado **`motoon`**. Existe um
+  `painel-moto` na mesma conta, e ele vem pré-selecionado.
+
+Os dois deploys convivem: cada push na `main` republica o Cloudflare e o
+GitHub Pages, do mesmo build.
 
 ### Vercel ou Netlify
 
