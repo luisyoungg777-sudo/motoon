@@ -4,7 +4,8 @@ import { IcoCamera } from './icones'
 import CartaoLancamento from './CartaoLancamento'
 import { rascunhoVazio, type Rascunho } from '@/services/rascunho'
 import { salvarLancamento } from '@/services/salvarLancamento'
-import { fotoParaDataUrl, obterLeitorNota } from '@/services/leitorNota'
+import { obterLeitorNota } from '@/services/leitorNota'
+import { prepararFoto } from '@/services/foto'
 import type { Vencimento } from '@/services/calculos'
 import { ROTULO_TIPO_LANCAMENTO, type ItemManutencao, type Moto, type TipoLancamento } from '@/types'
 
@@ -58,7 +59,7 @@ export default function FolhaRegistrar({
 
   async function escolherFoto(arquivo: File | undefined) {
     if (!arquivo) return
-    setFoto(await fotoParaDataUrl(arquivo))
+    setFoto(await prepararFoto(arquivo))
     setDetalhes(true)
   }
 

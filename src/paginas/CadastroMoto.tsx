@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Check, Search } from 'lucide-react'
 import { Alternador, Aviso, Rotulo } from '@/components/ui'
 import { SilhuetaMoto } from '@/components/MotoPalco'
+import { IcoCamera } from '@/components/icones'
+import { pesoAproximado, prepararFoto } from '@/services/foto'
 import { buscarModelos, listarMarcas } from '@/services/catalogoMotos'
 import { criarMoto, obterMoto, recalcularItensPadrao, salvarMoto } from '@/db/repos'
 import { useMoto } from '@/estado'
@@ -49,6 +51,18 @@ export default function CadastroMoto() {
   const [kmInicial, setKmInicial] = useState('')
   const [perfil, setPerfil] = useState<PerfilUso>('urbano_leve')
   const [salvando, setSalvando] = useState(false)
+  const [foto, setFoto] = useState<string | null>(null)
+  const [preparandoFoto, setPreparandoFoto] = useState(false)
+  const entradaFoto = useRef<HTMLInputElement>(null)
+
+  async function escolherFoto(arquivo?: File) {
+    if (!arquivo) return
+    setPreparandoFoto(true)
+    // Reduz antes de guardar: a foto vira texto dentro do registro e sobe
+    // junto na sincronização. Ver src/services/foto.ts.
+    setFoto(await prepararFoto(arquivo))
+    setPreparandoFoto(false)
+  }
 
   useEffect(() => {
     if (!id) return
@@ -63,6 +77,7 @@ export default function CadastroMoto() {
       setCor(m.cor)
       setKmInicial(String(m.km_inicial))
       setPerfil(m.perfil_uso)
+      setFoto(m.foto_url)
       setManual(true)
     })
   }, [id])
@@ -104,7 +119,7 @@ export default function CadastroMoto() {
       placa: formatarPlaca(placa),
       cor: cor.trim(),
       km_inicial: Number(kmInicial) || 0,
-      foto_url: original?.foto_url ?? null,
+      foto_url: foto,
       perfil_uso: perfil,
       ...doCatalogo,
     }
@@ -251,6 +266,65 @@ export default function CadastroMoto() {
           <Check className="ml-auto h-5 w-5 shrink-0 text-primaria" />
         </div>
       )}
+
+      {/*
+        A foto da própria moto. É ela a protagonista que a decisão de não usar
+        imagem de fabricante deixou em aberto — sem foto, entra a silhueta da
+        categoria, que identifica o tipo mas não a moto da pessoa.
+
+        Sem `capture` de propósito, ao contrário da foto da nota: nota se
+        fotografa na hora, a moto quase sempre já está no rolo da câmera. Com
+        `capture`, o celular pula a galeria e abre direto a câmera.
+      */}
+      <div className="mb-5">
+        <Rotulo>Foto da moto</Rotulo>
+        <div className="mt-2 flex items-center gap-3">
+          <div className="palco flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+            {foto ? (
+              <img src={foto} alt="Foto da sua moto" className="h-full w-full object-cover" />
+            ) : (
+              <SilhuetaMoto
+                categoria={escolhido?.categoria}
+                className="h-[70%] w-auto text-superficie3"
+              />
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+            <button
+              type="button"
+              className="btn-escuro w-full"
+              disabled={preparandoFoto}
+              onClick={() => entradaFoto.current?.click()}
+            >
+              <IcoCamera className="h-5 w-5" />
+              {preparandoFoto ? 'Preparando…' : foto ? 'Trocar foto' : 'Adicionar foto'}
+            </button>
+
+            {foto && (
+              <div className="flex w-full items-center justify-between gap-2">
+                <span className="text-micro text-textoFraco">{pesoAproximado(foto)}</span>
+                <button
+                  type="button"
+                  className="text-micro text-textoSec underline underline-offset-4"
+                  onClick={() => setFoto(null)}
+                >
+                  Remover
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <input
+          ref={entradaFoto}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          aria-label="Escolher foto da moto"
+          onChange={(e) => escolherFoto(e.target.files?.[0])}
+        />
+      </div>
 
       <div className="space-y-4">
         {!escolhido && (

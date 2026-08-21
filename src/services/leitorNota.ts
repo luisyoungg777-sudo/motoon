@@ -63,12 +63,11 @@ export function obterLeitorNota(): LeitorNota {
   return new LeitorPorApi(endpoint, chave)
 }
 
-/** Guarda a foto localmente como data URL — não sai do aparelho. */
-export function fotoParaDataUrl(arquivo: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const leitor = new FileReader()
-    leitor.onload = () => resolve(String(leitor.result))
-    leitor.onerror = () => reject(new Error('não deu para ler a foto'))
-    leitor.readAsDataURL(arquivo)
-  })
-}
+// A conversão da foto para data URL saiu daqui e virou `prepararFoto` em
+// src/services/foto.ts. A versão que morava aqui guardava o arquivo ORIGINAL:
+// 3 a 8 MB de foto de celular, mais um terço da inflação do base64, dentro do
+// registro — e o registro sobe inteiro a cada sincronização, num Supabase
+// gratuito de 500 MB. A de lá reduz antes, e cai para centenas de kB.
+//
+// O leitor de nota continua recebendo o `File` original, não a versão
+// reduzida: quem for ler texto de nota fiscal precisa da resolução cheia.
