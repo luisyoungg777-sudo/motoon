@@ -22,9 +22,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node 24 porque o jsdom exige. Ele declara
+      # `engines.node = ^22.22.2 || ^24.15.0 || >=26`, e o undici que vem
+      # junto precisa de >=22.19: em Node 20 o `markAsUncloneable` de
+      # worker_threads não existe, o undici quebra ao construir o
+      # CacheStorage e o jsdom nem chega a carregar.
+      #
+      # Isso derrubou cinco deploys seguidos, e de um jeito traiçoeiro: como
+      # a falha acontece antes de qualquer teste rodar, o Vitest saía com
+      # código 1 sem apontar UM teste sequer. Parecia teste quebrado; era o
+      # ambiente. Manter esta linha igual à versão da máquina de
+      # desenvolvimento é o que impede a divergência de voltar.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci

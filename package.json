@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Caderno de manutencao digital para motos",
+  "//engines": "Espelha a exigencia do jsdom, que e a mais estrita da arvore. Em Node 20 ele nem carrega: o undici procura worker_threads.markAsUncloneable, que so existe a partir do 22. Sem esta declaracao nada avisa, e a quebra so aparece la na frente, sem apontar teste nenhum.",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

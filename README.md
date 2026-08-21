@@ -10,7 +10,14 @@ em janela própria e funciona sem internet.
 
 ## Rodar
 
-Precisa do Node.js 20 ou mais novo.
+Precisa do **Node.js 22.22.2 ou mais novo** — há um `.nvmrc` pedindo o 24, que
+é o que o CI usa.
+
+Não é capricho de versão: o `jsdom`, que roda os testes de interface, declara
+`engines.node = "^22.22.2 || ^24.15.0 || >=26"`. Em Node 20 ele nem carrega —
+o `undici` procura `worker_threads.markAsUncloneable`, que só existe a partir
+do 22, e quebra antes de qualquer teste rodar. O sintoma é cruel: `npm test`
+sai com erro sem apontar um teste sequer.
 
 ```bash
 npm install
